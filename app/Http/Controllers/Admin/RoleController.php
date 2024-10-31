@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Farmer;
 use App\Models\Affiliation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,20 +18,14 @@ class RoleController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
-    {
-
-        $users = User::with('role')->get();
-        return view('admin.roles.index', compact('users'), [
-            'title' => 'Role Management'
-        ]);
-    }
 
     public function createUser()
     {
-        $roles = Role::all();
+        $users = User::with('role')->get();
+
+        $roles = Role::whereIn('id', [1, 3])->get();
         $affiliations = Affiliation::all();
-        return view('admin.roles.createUser', compact('roles', 'affiliations'), [
+        return view('admin.roles.createUser', compact('roles', 'affiliations', 'users'), [
             'title' => 'Create User',
             'users' => User::all()
         ]);
@@ -65,7 +60,7 @@ class RoleController extends Controller
         $user->save(); // Save the user to the database
 
         // Redirect back with success message
-        return redirect()->route('roles.createUser')->with('success', 'User created successfully.');
+        return redirect()->route('admin.roles.createUser')->with('success', 'User created successfully.');
     }
     public function editUser($id)
     {
@@ -77,34 +72,63 @@ class RoleController extends Controller
 
     public function updateUser(Request $request, $id)
     {
-        $validated = $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'email' => 'required|email|unique:users,email,'.$id,
-            'password' => 'nullable|min:8',
-            'role' => 'required',
-            'affiliation_id' => 'required|exists:affiliations,id',
+        // Validate the incoming request data
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',  // Add middle name validation
+            'extension' => 'nullable|string|max:10',  // Add extension validation (optional)
+            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            'role_id' => 'required|exists:roles,id',
+            'affiliation_id' => 'nullable|exists:affiliations,id', // Validate affiliation if provided
+            'password' => 'nullable|min:8|confirmed' // Optionally validate password
         ]);
 
+        // Update the user in the users table
         $user = User::findOrFail($id);
-        $user->first_name = $validated['first_name'];
-        $user->last_name = $validated['last_name'];
-        $user->email = $validated['email'];
-        if ($validated['password']) {
-            $user->password = bcrypt($validated['password']);
-        }
-        $user->role_id = $validated['role'];
-        $user->affiliation_id = $validated['affiliation_id'];
-        $user->save();
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name;
+        $user->email = $request->email;
+        $user->role_id = $request->role_id;
 
-        return redirect()->route('admin.roles.index')->with('success', 'User updated successfully.');
+        // Update password if provided
+        if ($request->password) {
+            $user->password = bcrypt($request->password);
+        }
+
+        $user->save(); // Save to the users table
+
+        // Update the farmer data in the farmers table
+        $farmer = Farmer::where('user_id', $id)->first(); // Assuming there's a relationship between user and farmer
+
+        if ($farmer) {
+            $farmer->first_name = $request->first_name;
+            $farmer->last_name = $request->last_name;
+            $farmer->middle_name = $request->middle_name ?? $farmer->middle_name; // Update only if provided
+            $farmer->extension = $request->extension ?? $farmer->extension; // Update only if provided
+            $farmer->affiliation_id = $request->affiliation_id ?? $farmer->affiliation_id; // Update only if provided
+
+            $farmer->save(); // Save to the farmers table
+        }
+
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'User and farmer updated successfully!');
     }
 
     public function deleteUser($id)
     {
+        // Delete the farmer data from the farmers table
+        $farmer = Farmer::where('user_id', $id)->first();
+        if ($farmer) {
+            $farmer->delete();
+        }
+
+        // Delete the user from the users table
         $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->route('admin.roles.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('admin.roles.createUser')->with('success', 'User and farmer deleted successfully.');
     }
+
+
 }

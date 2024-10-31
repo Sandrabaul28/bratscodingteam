@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('farmer_id'); // foreign key sa farmers table
             $table->unsignedBigInteger('plant_id');  // foreign key sa plants table
-            $table->integer('count');  // Bilang ng puno
+            $table->integer('count');
+            $table->decimal('latitude', 10, 8)->nullable(); // Add latitude field
+            $table->decimal('longitude', 11, 8)->nullable(); // Add longitude field
             $table->timestamps();
 
             $table->foreign('farmer_id')->references('id')->on('farmers')->onDelete('cascade');
             $table->foreign('plant_id')->references('id')->on('plants')->onDelete('cascade');
         });
+
     }
 
     /**

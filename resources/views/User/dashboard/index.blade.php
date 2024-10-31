@@ -1,4 +1,3 @@
-{{-- resources/views/admin/dashboard/index.blade.php --}}
 
 @extends('layouts.user.app')
 

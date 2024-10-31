@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-primary">ROLES MANAGEMENT / <span class="font-weight-bold">ADD NEW USER / USER LISTS </span></h6>
+        <h6 class="m-0 text-success">ROLES MANAGEMENT / <span class="font-weight-bold">ADD NEW USER / USER LISTS </span></h6>
     </div>
     <div class="card-body">
         @if (session('success'))
@@ -11,7 +11,7 @@
                 {{ session('success') }}
             </div>
         @endif
-        <form action="{{ route('roles.storeUser') }}" method="POST">
+        <form action="{{ route('admin.roles.storeUser') }}" method="POST">
             @csrf
 
             <div class="form-row mb-3">
@@ -89,10 +89,10 @@
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-primary">USER LISTS</h6>
+        <h6 class="m-0 text-success">USER LISTS</h6>
     </div>
     <div class="card-body">
-
+        <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -112,9 +112,9 @@
                         <td>{{ $user->role->role_name }}</td>
                         <td>
                             <!-- Action buttons with modal triggers -->
-                            <button class="btn btn-info btn-sm" onclick="viewUser({{ $user }})">View</button>
-                            <button class="btn btn-warning btn-sm" onclick="editUser({{ $user }})">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ $user->id }})">Delete</button>
+                            <button class="btn btn-info btn-sm" onclick="viewUser({{ $user }})"><i class="fas fa-eye"></i> </button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser({{ $user }})"><i class="fas fa-edit"></i> </button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ $user->id }})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 @endforeach
@@ -136,6 +136,7 @@
             <div class="modal-body">
                 <p><strong>First Name:</strong> <span id="viewFirstName"></span></p>
                 <p><strong>Last Name:</strong> <span id="viewLastName"></span></p>
+                <p><strong>Extension:</strong> <span id="viewExtension"></span></p>
                 <p><strong>Email:</strong> <span id="viewEmail"></span></p>
                 <p><strong>Role:</strong> <span id="viewRole"></span></p>
             </div>
@@ -228,9 +229,10 @@
         document.getElementById('editLastName').value = user.last_name;
         document.getElementById('editEmail').value = user.email;
         document.getElementById('editRole').value = user.role_id;
-        document.getElementById('editUserForm').action = '/admin/roles/' + user.id;
+        document.getElementById('editUserForm').action = '/admin/roles/' + user.id; // Ensure this matches the route
         $('#editUserModal').modal('show');
     }
+
 
     // Confirm Delete
     function confirmDelete(userId) {

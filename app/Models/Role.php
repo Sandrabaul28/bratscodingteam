@@ -26,4 +26,8 @@ class Role extends Model
     {
         return $this->hasMany(User::class, 'role_id');
     }
+    public function farmers()
+    {
+        return $this->hasMany(User::class, 'farmer_id');
+    }
 }

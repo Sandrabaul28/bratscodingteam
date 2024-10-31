@@ -12,13 +12,16 @@ return new class extends Migration
     public function up()
     {
         Schema::create('farmers', function (Blueprint $table) {
-            $table->id(); 
+            $table->id();
             $table->unsignedBigInteger('affiliation_id'); // Foreign key for affiliation
             $table->string('first_name');
             $table->string('last_name');
             $table->string('middle_name')->nullable();
             $table->string('extension')->nullable();
-            $table->timestamps(); 
+            $table->string('control_number')->unique(); // Control number field
+            $table->date('birthdate')->nullable(); // Birthdate field
+            $table->timestamps();
+            
         });
     }
 

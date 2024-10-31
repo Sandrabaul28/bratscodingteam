@@ -15,6 +15,9 @@ class InventoryValuedCrop extends Model
         'farmer_id',
         'plant_id',
         'count',
+        'latitude',
+        'longitude',
+        'added_by',
     ];
 
     // Define relationships if needed
@@ -27,4 +30,13 @@ class InventoryValuedCrop extends Model
     {
         return $this->belongsTo(Plant::class, 'plant_id');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'aggregator_user_id'); // Adjust the foreign key as necessary
+    }
+    public function addedby()
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
+
 }

@@ -4,25 +4,35 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Aggregator\AggregatorDashboardController;
-///
+//
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AffiliationController;
 use App\Http\Controllers\Admin\PlantController;
 use App\Http\Controllers\Admin\FarmersController;
 use App\Http\Controllers\Admin\HVCDPController;
 use App\Http\Controllers\Admin\CountController;
+use App\Http\Controllers\Admin\MonthlyInventoryController;
+
+
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Middleware\RoleMiddleware;
+//
+use App\Http\Controllers\Aggregator\AggregatorFarmersController;
+use App\Http\Controllers\Aggregator\RecordController;
+use App\Http\Controllers\Aggregator\AggregatorCountController;
+use App\Http\Controllers\Aggregator\AffiliateController;
+use App\Http\Controllers\Aggregator\PlantsController;
+
+use App\Http\Controllers\User\UserEncodeController;
+use App\Http\Controllers\User\UserPlantController;
+
+
+
+
 
 /*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
+|----------------------------------------------------------------------|
+| Web Routes                                                           |
+|----------------------------------------------------------------------|
 */
 
 // Public routes
@@ -32,30 +42,20 @@ Route::get('/', function () {
 
 // Authentication Routes
 Route::controller(LoginController::class)->group(function() {
-    Route::get('login', 'showLoginForm')->name('login');
+    Route::get('login', 'showLoginForm')->name('login')->middleware('auth.redirect');
     Route::post('login', 'login');
-    Route::post('logout', 'logout')->name('logout');
-});
-
-
-//routes admin, user and aggregator
-Route::middleware(['auth'])->group(function() {
-    Route::get('admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
-    Route::get('aggregator/dashboard', [AggregatorDashboardController::class, 'index'])->name('aggregator.dashboard');
+    Route::post('logout', 'logout')->name('logout')->middleware('auth');
 });
 
 
 Auth::routes();
+// Admin routes
+Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], function() {
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
-Route::group(['prefix' => '/admin', 'middleware' => ['admin']], function() {
-
-    // Resource route for managing users
-    Route::resource('users', UserController::class);
 
     // Role management
-    Route::group(['prefix' => 'roles', 'as' => 'roles.'], function() {
-        Route::get('/', [RoleController::class, 'index'])->name('index');
+    Route::prefix('roles')->name('admin.roles.')->group(function() {
         Route::get('/create', [RoleController::class, 'createUser'])->name('createUser');
         Route::post('/store', [RoleController::class, 'storeUser'])->name('storeUser');
         Route::get('/{id}', [RoleController::class, 'viewUser'])->name('viewUser');
@@ -64,31 +64,46 @@ Route::group(['prefix' => '/admin', 'middleware' => ['admin']], function() {
         Route::delete('/{id}', [RoleController::class, 'deleteUser'])->name('deleteUser');
     });
 
+    Route::resource('admin/affiliations', AffiliationController::class);
+
     // Affiliation management
-    Route::group(['prefix' => 'affiliations', 'as' => 'affiliations.'], function() {
+    Route::prefix('affiliations')->name('admin.affiliations.')->group(function() {
         Route::get('/', [AffiliationController::class, 'index'])->name('index');
         Route::post('/', [AffiliationController::class, 'store'])->name('store');
+        Route::put('/{id}', [AffiliationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AffiliationController::class, 'destroy'])->name('destroy');
     });
 
     // Plant management
-    Route::group(['prefix' => 'plants', 'as' => 'plants.'], function() {
+    Route::prefix('plants')->name('admin.plants.')->group(function() {
         Route::get('/', [PlantController::class, 'index'])->name('index');
         Route::post('/', [PlantController::class, 'store'])->name('store');
+        Route::delete('/{plant}', [PlantController::class, 'destroy'])->name('destroy');
+        Route::put('/{plant}', [PlantController::class, 'update'])->name('update');
+
     });
 
-//farmer
-    Route::resource('farmers', FarmerController::class);
-
-    Route::group(['prefix' => 'farmers', 'as' => 'farmers.'], function() {
+    Route::resource('farmers', FarmersController::class);
+    // Farmer management
+    Route::prefix('farmers')->name('admin.farmers.')->group(function() {
         Route::get('/', [FarmersController::class, 'index'])->name('index');
-        Route::get('/create', [FarmersController::class, 'create'])->name('create'); // Add this line
+        Route::get('/create', [FarmersController::class, 'create'])->name('create');
         Route::post('/', [FarmersController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [FarmersController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [FarmersController::class, 'update'])->name('update');
+        Route::delete('/{id}', [FarmersController::class, 'destroy'])->name('destroy');
+
+        // web.php
+        Route::get('/filter', [FarmersController::class, 'filter'])->name('filter');
+
+        Route::post('/import', [FarmersController::class, 'importExcel'])->name('import');
+
+
     });
 
 
-//HVCDP - INDEX
-    Route::group(['prefix' => 'hvcdp', 'as' => 'hvcdp.'], function () {
-        // Existing routes
+    // HVCDP management
+    Route::prefix('hvcdp')->name('admin.hvcdp.')->group(function() {
         Route::get('/count', [HVCDPController::class, 'index'])->name('index');
         Route::get('/count/{id}', [HVCDPController::class, 'show'])->name('show');
         Route::get('/count/create', [HVCDPController::class, 'create'])->name('create');
@@ -97,31 +112,129 @@ Route::group(['prefix' => '/admin', 'middleware' => ['admin']], function() {
         Route::put('/count/{id}', [HVCDPController::class, 'update'])->name('update');
         Route::delete('/count/{id}', [HVCDPController::class, 'destroy'])->name('destroy');
 
-        // Print route
         Route::get('/print', [HVCDPController::class, 'print'])->name('print');
-        
-        // Export to Excel route
         Route::get('/export-excel', [HVCDPController::class, 'exportBarangay'])->name('exportExcel');
-});
 
-//HVCDP - COUNTS
-    Route::group(['prefix' => 'hvcdp', 'as' => 'hvcdp.'], function() {
-        Route::get('/', [CountController::class, 'count'])->name('count'); // Changed from index to count
-        Route::post('/', [CountController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('hvcdp')->name('admin.count.')->group(function() {
+        Route::get('/', [CountController::class, 'count'])->name('count');
+        Route::post('/', [CountController::class, 'store'])->name('count.store');
         Route::get('/{id}/edit', [CountController::class, 'edit'])->name('edit');
         Route::put('/{id}', [CountController::class, 'update'])->name('update');
         Route::delete('/{id}', [CountController::class, 'destroy'])->name('destroy');
+        
+
     });
 
+    Route::resource('inventories', MonthlyInventoryController::class);
 
+    Route::prefix('inventory')->name('admin.inventory.')->group(function() {
+        Route::get('/', [MonthlyInventoryController::class, 'index'])->name('index');
+        Route::get('/create', [MonthlyInventoryController::class, 'create'])->name('create');
+        Route::post('/', [MonthlyInventoryController::class, 'store'])->name('store');
+        Route::get('/{inventory}/edit', [MonthlyInventoryController::class, 'edit'])->name('edit');
+        
+        Route::put('{inventory}', [MonthlyInventoryController::class, 'update'])->name('update');
+        Route::delete('/{inventory}', [MonthlyInventoryController::class, 'destroy'])->name('destroy');
+
+        //EXPORTEXCEL
+        Route::get('/inventory', [MonthlyInventoryController::class, 'print'])->name('printMonthlyInventory');
+        // Export to Excel
+        Route::get('export-monthly-inventory-excel', [MonthlyInventoryController::class, 'exportMonthlyInventoryExcel'])
+            ->name('exportMonthlyInventoryExcel');
+            //
+    });
+
+    
+    
 });
 
 
-Route::group(['prefix' => '/user', 'middleware' => ['user']], function() {
+// Aggregator routes 
+Route::group(['prefix' => 'aggregator', 'middleware' => ['auth','role:Aggregator']], function() {
+    Route::get('/dashboard', [AggregatorDashboardController::class, 'index'])->name('aggregator.dashboard');
 
-    // Resource route for managing users (index, create, store, show, edit, update, destroy)
-    Route::resource('users', UserController::class);
+    Route::resource('farmers', AggregatorFarmersController::class);
+    // Farmer management
+    Route::prefix('farmers')->name('aggregator.farmers.')->group(function() {
+        Route::get('/', [AggregatorFarmersController::class, 'index'])->name('index');
+        Route::get('/create', [AggregatorFarmersController::class, 'create'])->name('create');
+        Route::post('/', [AggregatorFarmersController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [AggregatorFarmersController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AggregatorFarmersController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AggregatorFarmersController::class, 'destroy'])->name('destroy');
+    });
 
+    // HVCDP management
+    Route::prefix('hvcdp')->name('aggregator.hvcdp.')->group(function() {
+        Route::get('/count', [RecordController::class, 'index'])->name('index');
+        Route::get('/count/{id}', [RecordController::class, 'show'])->name('show');
+        Route::get('/count/create', [RecordController::class, 'create'])->name('create');
+        Route::post('/count', [RecordController::class, 'store'])->name('store');
+        Route::get('/count/{id}/edit', [RecordController::class, 'edit'])->name('edit');
+        Route::put('/count/{id}', [RecordController::class, 'update'])->name('update');
+        Route::delete('/count/{id}', [RecordController::class, 'destroy'])->name('destroy');
+
+        Route::get('/print', [RecordController::class, 'print'])->name('print');
+        Route::get('/export-excel', [RecordController::class, 'exportBarangay'])->name('exportExcel');
+
+    });
+
+    Route::prefix('hvcdp')->name('aggregator.count.')->group(function() {
+        Route::get('/', [AggregatorCountController::class, 'count'])->name('count');
+        Route::post('/', [AggregatorCountController::class, 'store'])->name('store');
+        Route::post('/count', [AggregatorCountController::class, 'store'])->name('store');
+
+        Route::get('/{id}/edit', [AggregatorCountController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AggregatorCountController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AggregatorCountController::class, 'destroy'])->name('destroy');
+
+    });
+
+    // Affiliation management
+    Route::prefix('affiliations')->name('affiliations.')->group(function() {
+        Route::get('/', [AffiliateController::class, 'index'])->name('index');
+        Route::post('/', [AffiliateController::class, 'store'])->name('store');
+        Route::put('/{id}', [AffiliateController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AffiliateController::class, 'destroy'])->name('destroy');
+
+    });
+
+    // Plant management
+    Route::prefix('plants')->name('aggregator.plants.')->group(function() {
+        Route::get('/', [PlantsController::class, 'index'])->name('index');
+        Route::post('/', [PlantsController::class, 'store'])->name('store');
+        Route::delete('/{plant}', [PlantsController::class, 'destroy'])->name('destroy');
+        Route::put('/{plant}', [PlantsController::class, 'update'])->name('update');
+    });
+});
+
+
+Route::group(['prefix' => 'user', 'middleware' => ['auth', 'role:User']], function() {
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+
+    Route::prefix('hvcdp')->name('user.count.')->group(function() {
+        Route::get('/', [UserEncodeController::class, 'count'])->name('count');
+        Route::post('/', [UserEncodeController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [UserEncodeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [UserEncodeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UserEncodeController::class, 'destroy'])->name('destroy');
+        // In web.php
+        Route::get('/fetch-farmers', [UserEncodeController::class, 'fetchFarmers'])->name('fetch.farmers');
+        Route::post('bulk-destroy', [UserEncodeController::class, 'bulkDestroy'])->name('bulkDestroy');
+
+
+    });
+
+    // Plant management
+    Route::prefix('plants')->name('user.plants.')->group(function() {
+        Route::get('/', [UserPlantController::class, 'index'])->name('index');
+        Route::post('/', [UserPlantController::class, 'store'])->name('store');
+        Route::delete('/{plant}', [UserPlantController::class, 'destroy'])->name('destroy');
+        Route::put('/{plant}', [UserPlantController::class, 'update'])->name('update');
+
+    });
 });
 
 

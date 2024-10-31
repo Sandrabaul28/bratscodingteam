@@ -19,6 +19,10 @@ class Affiliation extends Model
     {
         return $this->hasMany(Farmer::class);
     }
+    public function inventories()
+    {
+        return $this->hasMany(MonthlyInventory::class);
+    }
 
     public function print()
     {

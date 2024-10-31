@@ -13,6 +13,7 @@ class CountController extends Controller
 {
     public function count()
     {
+
         $inventoryCrops = DB::table('inventory_valued_crops')
             ->join('farmers', 'inventory_valued_crops.farmer_id', '=', 'farmers.id')
             ->join('plants', 'inventory_valued_crops.plant_id', '=', 'plants.id')
@@ -22,11 +23,13 @@ class CountController extends Controller
                 'farmers.last_name',
                 'affiliations.name_of_association',
                 'affiliations.name_of_barangay',
+                'inventory_valued_crops.id', 
                 'inventory_valued_crops.farmer_id',
-                DB::raw('GROUP_CONCAT(plants.name_of_plants, " (", inventory_valued_crops.count, ")") as plants_counts')
+                'inventory_valued_crops.plant_id',
+                'inventory_valued_crops.count', // Add this to get the count value
+                'plants.name_of_plants' // Get plant name
             )
-            ->groupBy('inventory_valued_crops.farmer_id')
-            ->get();
+            ->get(); // No grouping here to get individual plant records
 
         $farmers = Farmer::all(); // Get all farmers for the form
         $plants = Plant::all(); // Get all plants for the form
@@ -37,53 +40,69 @@ class CountController extends Controller
         ]);
     }
 
+
     // Store a new inventory crop
     public function store(Request $request)
     {
+
         $request->validate([
             'farmer_id' => 'required|exists:farmers,id',
             'plant_id' => 'required|exists:plants,id',
             'count' => 'required|integer|min:1',
+            'added_by' => $addedBy,
         ]);
 
+        // Create a new inventory valued crop
         InventoryValuedCrop::create($request->all());
 
-        return redirect()->back()->with('success', 'Crop added successfully.');
+        // Redirect to the count view with success message
+        return redirect()->route('admin.hvcdp.count')->with('success', 'Crop added successfully.');
     }
 
-    // Show the form for editing the specified crop
     public function edit($id)
-    {
-        $crop = InventoryValuedCrop::with(['farmer', 'plant'])->findOrFail($id);
+{
+    // Hanapin ang crop gamit ang ibinigay na id
+    $crop = InventoryValuedCrop::findOrFail($id);
 
-        return response()->json([
-            'farmer' => $crop->farmer->first_name . ' ' . $crop->farmer->last_name,
-            'plant' => $crop->plant->name_of_plants,
-            'count' => $crop->count,
-        ]);
-    }
+    // Kunin ang farmer id mula sa crop record
+    $farmerId = $crop->farmer_id;
 
-    // Update the specified crop in storage
+    // I-retrieve ang lahat ng inventory crops para sa farmer kasama ang kanilang IDs
+    $inventoryCrops = InventoryValuedCrop::with('plant')->where('farmer_id', $farmerId)->get();
+
+    // Kunin ang lahat ng plants para sa dropdown (o anumang field na kailangan)
+    $plants = Plant::all(); // Assumes you want to allow changing plants
+
+    // Ibalik ang view kasama ang crop, farmer id, inventory crops, at plants
+    return view('admin.inventory.edit', compact('crop', 'inventoryCrops', 'farmerId', 'plants'));
+}
+
+
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'farmer_id' => 'required|exists:farmers,id',
-            'plant_id' => 'required|exists:plants,id',
-            'count' => 'required|integer|min:1',
-        ]);
+{
+    $validated = $request->validate([
+        'count' => 'required|integer|min:0',
+    ]);
 
-        $crop = InventoryValuedCrop::findOrFail($id);
-        $crop->update($request->all());
+    // Find the inventory record by plant ID and update it
+    $inventoryCrop = InventoryValuedCrop::findOrFail($id);
+    $inventoryCrop->count = $validated['count'];
+    $inventoryCrop->save();
 
-        return response()->json(['message' => 'Crop updated successfully.']);
-    }
+    return redirect()->back()->with('success', 'Plant count updated successfully.');
+}
 
-    // Remove the specified crop from storage
+
+
     public function destroy($id)
     {
-        $crop = InventoryValuedCrop::findOrFail($id);
-        $crop->delete();
+        // Find the inventory record by ID and delete it
+        $inventoryCrops = InventoryValuedCrop::findOrFail($id);
+        $inventoryCrops->delete();
 
-        return response()->json(['message' => 'Crop deleted successfully.']);
+        return redirect()->back()->with('success', 'Record deleted successfully.');
     }
+
+
+
 }

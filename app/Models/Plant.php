@@ -19,6 +19,14 @@ class Plant extends Model
 
     public function inventoryValuedCrops()
     {
-        return $this->hasMany(InventoryValuedCrop::class);
+        return $this->hasMany(InventoryValuedCrop::class, 'plant_id');
+    }
+    public function varieties()
+    {
+        return $this->hasMany(PlantVariety::class);
+    }
+    public function inventories()
+    {
+        return $this->hasMany(MonthlyInventory::class);
     }
 }

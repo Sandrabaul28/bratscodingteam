@@ -6,24 +6,28 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class RoleMiddleware
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string  $role
-     * @return mixed
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $role)
+    public function handle($request, Closure $next, $role)
     {
-        // Check if the user is authenticated and has the correct role
-        if (Auth::check() && Auth::user()->role === $role) {
-            return $next($request);
+        
+        // Check if the user is authenticated
+        if (Auth::check()) {
+            if (Auth::user()->role->role_name !== $role) {
+                return redirect('/login')->withErrors(['email' => 'Unauthorized access.']);
+            }
+        } else {
+            return redirect('/login')->withErrors(['email' => 'Please log in.']);
         }
 
-        // Redirect to the login page if the user is not authenticated or doesn't have the correct role
-        return redirect()->route('login')->withErrors(['role' => 'You do not have permission to access this page.']);
+        return $next($request);
     }
+
 }

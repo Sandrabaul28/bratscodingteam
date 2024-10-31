@@ -3,32 +3,39 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-primary">HVCDP Records</h6>
+        <h6 class="m-0 text-success">HVCDP Records</h6>
     </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="{{ route('hvcdp.count')}}" class="btn btn-primary">Add Record</a>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <a href="{{ route('admin.count.count')}}" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i>Add Record</a>
             <div>
-                <a href="{{ route('hvcdp.print', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'barangay' => request('barangay')]) }}" class="btn btn-primary" target="_blank">Print</a>
-                <button class="btn btn-secondary">CSV</button>
-                <a href="{{ route('hvcdp.exportExcel', ['barangay' => request('barangay'), 'from_date' => request('from_date'), 'to_date' => request('to_date')]) }}" class="btn btn-success" target="_blank">Export Excel</a>
-
+                <!-- Print Button -->
+                <a href="{{ route('admin.hvcdp.print', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'barangay' => request('barangay'), 'inputted_data' => request('inputted_data')]) }}" 
+                   class="btn btn-primary" target="_blank">
+                   <i class="fa fa-print" aria-hidden="true"></i><br>Print
+                </a>
+                
+                <!-- Export to Excel Button -->
+                <a href="{{ route('admin.inventory.exportMonthlyInventoryExcel', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'barangay' => request('barangay'), 'inputted_data' => request('inputted_data')]) }}" 
+                   class="btn btn-success" target="_blank">
+                   <i class="fa fa-th" aria-hidden="true"></i><br>Excel
+                </a>
             </div>
         </div>
 
         <div class="mb-4">
             <!-- Filter by Date Form -->
-            <form action="{{ route('hvcdp.index') }}" method="GET" class="form-inline mb-3">
+            <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline mb-3">
                 <label for="from_date">From: </label>
                 <input type="date" name="from_date" id="from_date" class="form-control mx-2">
                 <label for="to_date">To: </label>
                 <input type="date" name="to_date" id="to_date" class="form-control mx-2">
                 <button type="submit" class="btn btn-success mx-2">Filter</button>
-                <a href="{{ route('hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
+                <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
             </form>
 
             <!-- Filter by Barangay Form -->
-            <form action="{{ route('hvcdp.index') }}" method="GET" class="form-inline">
+            <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline">
                 <label for="barangay">Filter by Barangay: </label>
                 <select name="barangay" id="barangay" class="form-control mx-2">
                     <option value="">-- Select Barangay --</option>
@@ -37,16 +44,40 @@
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-success mx-2">Filter</button>
-                <a href="{{ route('hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
+                <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
             </form>
-        </div>
+            <br>
+            <!-- Filter by Inputted Data Form -->
+            <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline mb-3">
+                <label>Filter Farmers with Data: </label>
+                <div class="form-check form-check-inline mx-2">
+                    <input class="form-check-input" type="checkbox" id="withData" name="inputted_data[]" value="yes">
+                    <label class="form-check-label" for="withData">With Data</label>
+                </div>
+                <div class="form-check form-check-inline mx-2">
+                    <input class="form-check-input" type="checkbox" id="withoutData" name="inputted_data[]" value="no">
+                    <label class="form-check-label" for="withoutData">Without Data</label>
+                </div>
+                <button type="submit" class="btn btn-success mx-2">Filter</button>
+                <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
+            </form>
 
+
+        </div>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 text-success">DATA LISTS</h6>
+    </div>
+    <div class="card-body">
+    <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>No.</th>
                     <th>Surname</th>
                     <th>Firstname</th>
+                    <th>Affiliation</th>
+                    <th>Has Data</th> <!-- Existing column -->
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -56,10 +87,12 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $farmer->last_name }}</td>
                     <td>{{ $farmer->first_name }}</td>
+                    <td>{{ $farmer->affiliation->name_of_barangay }}</td>
+                    <td>{{ $farmer->inventoryValuedCrops->isNotEmpty() ? 'Yes' : 'No' }}</td>
                     <td>
-                        <button class="btn btn-info" data-toggle="modal" data-target="#viewModal{{ $farmer->id }}">View</button>
-                        <button class="btn btn-warning" data-toggle="modal" data-target="#editModal{{ $farmer->id }}">Edit</button>
-                        <button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal{{ $farmer->id }}">Delete</button>
+                        <button class="btn btn-info" data-toggle="modal" data-target="#viewModal{{ $farmer->id }}"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-warning" data-toggle="modal" data-target="#editModal{{ $farmer->id }}"><i class="fas fa-edit"></i> </button>
+                        <button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal{{ $farmer->id }}"><i class="fas fa-trash"></i> </button>
                     </td>
                 </tr>
 
@@ -74,9 +107,9 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <p><strong>Surname: </strong>{{ $farmer->last_name }}</p>
-                                <p><strong>Firstname: </strong>{{ $farmer->first_name }}</p>
-                                <p><strong>Plants:</strong></p>
+                                <p><strong>Surname : </strong>{{ $farmer->last_name }}</p>
+                                <p><strong>Firstname : </strong>{{ $farmer->first_name }}</p>
+                                <p><strong>Plants :</strong></p>
                                 <ul>
                                     @foreach($farmer->inventoryValuedCrops as $inventoryValuedCrop)
                                         <li>{{ $inventoryValuedCrop->plant->name_of_plants }} - {{ $inventoryValuedCrop->count }}</li>
@@ -93,7 +126,7 @@
                 <!-- Edit Modal -->
                 <div class="modal fade" id="editModal{{ $farmer->id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $farmer->id }}" aria-hidden="true">
                     <div class="modal-dialog" role="document">
-                        <form action="{{ route('hvcdp.update', $farmer->id) }}" method="POST">
+                        <form action="{{ route('admin.hvcdp.update', $farmer->id) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="modal-content">
@@ -105,11 +138,11 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="form-group">
-                                        <label for="last_name">Surname *</label>
+                                        <label for="last_name">Surname <span style="color: red;">*</span></label>
                                         <input type="text" class="form-control" name="last_name" value="{{ $farmer->last_name }}">
                                     </div>
                                     <div class="form-group">
-                                        <label for="first_name">Firstname *</label>
+                                        <label for="first_name">Firstname <span style="color: red;">*</span></label>
                                         <input type="text" class="form-control" name="first_name" value="{{ $farmer->first_name }}">
                                     </div>
                                     <!-- Plants and quantities -->
@@ -124,6 +157,7 @@
                                             @endforeach
                                         </ul>
                                     </div>
+
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -133,6 +167,18 @@
                         </form>
                     </div>
                 </div>
+                <script>
+                    document.querySelectorAll('.btn-edit').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const modal = document.getElementById('editModal' + id);
+                        modal.querySelector('input[name="first_name"]').value = this.getAttribute('data-first_name');
+                        modal.querySelector('input[name="last_name"]').value = this.getAttribute('data-last_name');
+                        // Populate plant data if needed
+                    });
+                });
+
+                </script>
 
                 <!-- Delete Modal -->
                 <div class="modal fade" id="deleteModal{{ $farmer->id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ $farmer->id }}" aria-hidden="true">
@@ -148,7 +194,7 @@
                                 Are you sure you want to delete {{ $farmer->first_name }} {{ $farmer->last_name }}?
                             </div>
                             <div class="modal-footer">
-                                <form action="{{ route('hvcdp.destroy', $farmer->id) }}" method="POST">
+                                <form action="{{ route('admin.hvcdp.destroy', $farmer->id) }}" method="POST">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -161,6 +207,7 @@
                 @endforeach
             </tbody>
         </table>
+        
     </div>
 </div>
 @endsection

@@ -15,7 +15,30 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ asset('assets/css/sb-admin-2.min.css') }}" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ asset('assets/img/logo1.png')}}" class="circular-logo">
+    <link rel="shortcut icon" href="{{ asset('assets/img/LOGO2.png')}}" class="circular-logo">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            overflow: hidden; /* Para hindi mag-scroll ang buong body */
+        }
+        #wrapper {
+            height: 100vh; /* Set the wrapper to full height */
+            display: flex;
+        }
+        #content {
+            overflow-y: auto; /* Para sa scroll sa main content */
+            flex: 1; /* This allows the content area to take the remaining space */
+            padding: 20px; /* Optional: add some padding */
+        }
+        #sidebar {
+            min-width: 250px; /* Minimum width of sidebar */
+            max-width: 250px; /* Maximum width of sidebar */
+            background: #4e73df; /* Sample sidebar background */
+        }
+    </style>
     
 </head>
 <body id="page-top">
@@ -27,7 +50,7 @@
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center">
                 <div class="sidebar-brand-icon" style="display: flex; align-items: center; justify-content: center;">
-                    <img src="{{ asset('assets/img/logo1.png') }}" alt="logo" style="width: 50px; height: 50px; border-radius: 50%;">
+                    <img src="{{ asset('assets/img/LOGO2.png') }}" alt="logo" style="width: 50px; height: 50px; border-radius: 50%;">
                 </div>
                 <div class="sidebar-brand-text" style="margin: 1px;">BONTOC CROPS</div>
             </a>
@@ -52,7 +75,7 @@
             </div>
 
             <!-- Nav Item - Pages Collapse Menu -->
-            <li class="nav-item">
+           <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
                     aria-expanded="true" aria-controls="collapseTwo">
                     <i class="fas fa-fw fa-folder"></i>
@@ -60,59 +83,16 @@
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Menu:</h6>
-                        <a class="collapse-item" href="{{ route('admin.inventory.record')}}">Barangay Lists</a>
-                        <a class="collapse-item" href="{{ route('admin.inventory.create')}}">Add Barangay</a>
-                        
-                    </div>
+                        <h6 class="collapse-header">HVCDP Section:</h6>
+                        <a class="collapse-item" href="{{ route('user.count.count')}}">Crop Data Summary</a></div>
                 </div>
             </li>
-
             <!-- Nav Item - Utilities Collapse Menu -->
-            
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Addons
-            </div>
-
-            <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
-                    aria-expanded="true" aria-controls="collapsePages">
-                    <i class="fas fa-fw fa-folder"></i>
-                    <span>Pages</span>
-                </a>
-                <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Login Screens:</h6>
-                        <a class="collapse-item" href="login.html">Login</a>
-                        <a class="collapse-item" href="register.html">Register</a>
-                        <a class="collapse-item" href="forgot-password.html">Forgot Password</a>
-                        <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Other Pages:</h6>
-                        <a class="collapse-item" href="404.html">404 Page</a>
-                        <a class="collapse-item" href="blank.html">Blank Page</a>
-                    </div>
-                </div>
-            </li>
-
-            <!-- Nav Item - Charts -->
-            <li class="nav-item">
-                <a class="nav-link" href="charts.html">
+                <a class="nav-link" href="{{ route('user.plants.index')}}">
                     <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Charts</span></a>
+                    <span>Plant Database</span></a>
             </li>
-
-            <!-- Nav Item - Tables -->
-            <li class="nav-item">
-                <a class="nav-link" href="tables.html">
-                    <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
-            </li>
-
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -310,7 +290,7 @@
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">
                                     {{ optional(auth()->user())->first_name }}
                                     <h6 style="font-size: 10px;">
-                                        {{ optional(auth()->user())->role === 'ADMIN' ? 'ADMINISTRATOR' : (optional(auth()->user())->role === 'AGGREGATOR' ? 'AGGREGATOR' : 'USER') }}
+                                        {{ optional(auth()->user())->role->role_name }} 
                                     </h6>
                                 </span>
 
@@ -387,24 +367,30 @@
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-danger" href="{{ route('login') }}">Logout</a>
-                </div>
+    <!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" type="button" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Logout
+                </button>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- Bootstrap core JavaScript-->
     <script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>

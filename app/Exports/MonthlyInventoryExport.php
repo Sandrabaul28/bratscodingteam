@@ -1,0 +1,83 @@
+<?php
+
+namespace App\Exports;
+
+use App\Models\MonthlyInventory;
+use App\Models\Plant;
+use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
+class MonthlyInventoryExport implements FromView, WithHeadings, WithStyles
+{
+    public function view(): View
+    {
+        $monthlyInventories = MonthlyInventory::with(['farmer', 'plant'])->get();
+
+        $data = $monthlyInventories->map(function ($inventory) {
+            // Concatenate the farmer's name
+            $farmerFullName = trim($inventory->farmer->last_name . ', ' . $inventory->farmer->first_name . ' ' . $inventory->farmer->middle_name . ' ' . $inventory->farmer->extension);
+
+            return [
+                'barangay' => $inventory->farmer->affiliation->name_of_barangay ?? '', // Barangay
+                'commodity' => $inventory->plant->name_of_plants ?? '',                // Commodity (Plant name)
+                'farmer' => $farmerFullName,                                          // Full Farmer Name
+                'planting_density' => $inventory->planting_density,                   // Planting Density (ha)
+                'production_volume' => $inventory->production_volume,                 // Production Volume / Hectare (MT)
+                'newly_planted' => $inventory->newly_planted,                    // # Hill/Puno - Newly Planted
+                'vegetative' => $inventory->vegetative,                          // # Hill/Puno - Vegetative
+                'reproductive' => $inventory->reproductive,                      // # Hill/Puno - Reproductive
+                'maturity_harvested' => $inventory->maturity_harvested,          // # Hill/Puno - Maturity/Harvested
+                'total' => $inventory->newly_planted + $inventory->vegetative + $inventory->reproductive + $inventory->maturity_harvested, // Total # Hills
+
+                'newly_planted_divided' =>( $inventory->newly_planted_divided),  // Planted Area (Ha) - Newly Planted
+                'vegetative_divided' => $inventory->vegetative_divided,        // Planted Area (Ha) - Vegetative
+                'reproductive_divided' => $inventory->reproductive_divided,    // Planted Area (Ha) - Reproductive
+                'maturity_harvested_divided' => $inventory->maturity_harvested_divided,       // Planted Area (Ha) - Maturity/Harvested
+                'total_planted_area' => $inventory->total_planted_area,
+                
+                'area_harvested' => $inventory->area_harvested,                       // Area Harvested (Has)
+                
+                'final_production_volume' => $inventory->final_production_volume,     // Final Production Volume (MT)
+            ];
+        });
+
+        return view('admin.inventory.monthly_inventory', ['data' => $data]);
+    }
+
+
+    public function headings(): array
+    {
+        return [
+            ['BARANGAY', 'COMMODITY', "FARMER'S", 'Planting Density (ha)', 'Prodn. Vol/Hectare (MT)', '# Hill/Puno', 'Newly Planted', 'Vegetative', 'Reproductive', 'Maturity/Harvested', 'TOTAL', 'Area Harvested (HAS)', 'Production Volume (MT)'],
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        // Merge headers
+        $sheet->mergeCells('A1:A2');
+        $sheet->mergeCells('B1:B2');
+        $sheet->mergeCells('C1:C2');
+        $sheet->mergeCells('D1:E1');
+        $sheet->mergeCells('F1:H1');
+        $sheet->mergeCells('I1:K1');
+        $sheet->mergeCells('L1:M1');
+
+        // Apply styles
+        $sheet->getStyle('A1:T1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF4CAF50']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ]);
+
+        // Set auto size for columns
+        foreach (range('A', 'T') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        
+        return $sheet;
+    }
+}

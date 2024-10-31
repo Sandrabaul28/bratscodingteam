@@ -6,19 +6,66 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
-    // Show the login form
+    /*
+    |--------------------------------------------------------------------------
+    | Login Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles authenticating users for the application and
+    | redirecting them to your home screen. The controller uses a trait
+    | to conveniently provide its functionality to your applications.
+    |
+    */
+
+    use AuthenticatesUsers;
+    /**
+     * Where to redirect users after login.
+     *
+     * @var string
+     */
+    protected $redirectTo = '/home';
+
+
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth')->only('logout');
+    }
+    
+    /**
+     * Show the login form.
+     *
+     * @return \Illuminate\View\View
+     */
     public function showLoginForm()
     {
-
-        return view('auth.login', [
-            'title' => 'Welcome to Crops Bontoc'
-        ]); // Assumes you have a 'login.blade.php' in 'resources/views/auth/'
+        if (Auth::check()) {
+        // If the user is already authenticated, redirect them based on their role
+        $user = Auth::user();
+        return $this->redirectUserBasedOnRole($user);
     }
 
-    // Handle the login request
+        // If not authenticated, show the login form
+        return view('auth.login', [
+            'title' => 'Welcome to Crops Bontoc'
+        ]);
+    }
+
+    /**
+     * Handle the login request.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function login(Request $request)
     {
         // Validate the login form inputs
@@ -30,36 +77,55 @@ class LoginController extends Controller
         // Attempt to authenticate the user using the provided credentials
         $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials, $request->remember)) {
-
+        if (Auth::attempt($credentials, $request->has('remember'))) {
+            // Regenerate the session to prevent session fixation attacks
             $request->session()->regenerate();
+
             // Authentication passed, check user role and redirect accordingly
             $user = Auth::user();
-            switch ($user->role->role_name) { // Assuming 'name' is the column in the roles table
-                case 'Admin':
-                    return redirect()->route('admin.dashboard');
-                case 'User':
-                    return redirect()->route('user.dashboard');
-                case 'Aggregator':
-                    return redirect()->route('aggregator.dashboard');
-                default:
-                    return redirect()->route('login')->withErrors(['email' => 'Unauthorized access.']);
-            }
+            return $this->redirectUserBasedOnRole($user);
         }
 
-        return redirect()->intended('dashboard');
         // Authentication failed, redirect back to login with error message
         return redirect()->route('login')->withErrors(['email' => 'Invalid credentials provided.']);
     }
 
-    // Logout the user
+    /**
+     * Redirect the user based on their role.
+     *
+     * @param \App\Models\User $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function redirectUserBasedOnRole($user)
+    {
+        switch ($user->role->role_name) { // Assuming 'role_name' is the column in the roles table
+            case 'Admin':
+                return redirect()->route('admin.dashboard');
+            case 'User':
+                return redirect()->route('user.dashboard');
+            case 'Aggregator':
+                return redirect()->route('aggregator.dashboard');
+            default:
+                Auth::logout(); // Log out unauthorized users
+                return redirect()->route('login')->withErrors(['email' => 'Unauthorized access.']);
+        }
+    }
+
+    /**
+     * Handle the logout request.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+
+        return redirect()->route('login'); // Redirect to login page
     }
-    
 }

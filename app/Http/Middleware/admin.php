@@ -5,8 +5,10 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Auth;
+use App\Models\Role;
 
-class admin
+class Admin
 {
     /**
      * Handle an incoming request.
@@ -16,9 +18,10 @@ class admin
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->user()) {
-            $role_name = roles::where('id', auth()->user()->roles)->first();
-            if(Auth::user() && $role->role_name == 'admin') {
-                return $next($request);
+            $role = roles::where('id', auth()->user()->roles)->first();
+            if(Auth::user() && $role->role_name == 'Admin') {
+                // return $next($request);
+                dd($role->role_name);
             }
         }
         return redirect()->route('login');

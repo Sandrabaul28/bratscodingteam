@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryValuedCrop; 
+use App\Models\InventoryDayApproval; 
 use App\Models\Farmer;
 use App\Models\Plant; // Assuming you have a Plant model
 use Illuminate\Http\Request;
@@ -13,23 +14,31 @@ class CountController extends Controller
 {
     public function count()
     {
-
         $inventoryCrops = DB::table('inventory_valued_crops')
-            ->join('farmers', 'inventory_valued_crops.farmer_id', '=', 'farmers.id')
-            ->join('plants', 'inventory_valued_crops.plant_id', '=', 'plants.id')
-            ->join('affiliations', 'farmers.affiliation_id', '=', 'affiliations.id')
-            ->select(
-                'farmers.first_name',
-                'farmers.last_name',
-                'affiliations.name_of_association',
-                'affiliations.name_of_barangay',
-                'inventory_valued_crops.id', 
-                'inventory_valued_crops.farmer_id',
-                'inventory_valued_crops.plant_id',
-                'inventory_valued_crops.count', // Add this to get the count value
-                'plants.name_of_plants' // Get plant name
-            )
-            ->get(); // No grouping here to get individual plant records
+        ->join('farmers', 'inventory_valued_crops.farmer_id', '=', 'farmers.id')
+        ->join('plants', 'inventory_valued_crops.plant_id', '=', 'plants.id')
+        ->join('affiliations', 'farmers.affiliation_id', '=', 'affiliations.id')
+        ->join('users', 'inventory_valued_crops.added_by', '=', 'users.id') // Join to users table for added_by
+        ->join('roles', 'users.role_id', '=', 'roles.id') // Join to roles table for role name
+        ->select(
+            'farmers.first_name',
+            'farmers.last_name',
+            'affiliations.name_of_association',
+            'affiliations.name_of_barangay',
+            'inventory_valued_crops.id',
+            'inventory_valued_crops.farmer_id',
+            'inventory_valued_crops.plant_id',
+            'inventory_valued_crops.count',
+            'plants.name_of_plants',
+            'inventory_valued_crops.latitude',
+            'inventory_valued_crops.longitude',
+            'inventory_valued_crops.created_at', // Include the created_at column
+            'users.first_name as added_by_first_name', // Get the encoder's first name
+            'users.last_name as added_by_last_name',   // Get the encoder's last name
+            'roles.role_name'                         // Get the role name of the encoder
+        )
+        ->get();
+
 
         $farmers = Farmer::all(); // Get all farmers for the form
         $plants = Plant::all(); // Get all plants for the form
@@ -41,6 +50,10 @@ class CountController extends Controller
     }
 
 
+
+        
+
+
     // Store a new inventory crop
     public function store(Request $request)
     {
@@ -49,6 +62,7 @@ class CountController extends Controller
             'farmer_id' => 'required|exists:farmers,id',
             'plant_id' => 'required|exists:plants,id',
             'count' => 'required|integer|min:1',
+            
             'added_by' => $addedBy,
         ]);
 
@@ -78,19 +92,25 @@ class CountController extends Controller
 }
 
 
+
     public function update(Request $request, $id)
 {
     $validated = $request->validate([
         'count' => 'required|integer|min:0',
+        'latitude' => 'nullable|numeric', // Make latitude optional
+        'longitude' => 'nullable|numeric', // Make longitude optional
     ]);
 
-    // Find the inventory record by plant ID and update it
+    // Find the inventory record by ID and update it
     $inventoryCrop = InventoryValuedCrop::findOrFail($id);
     $inventoryCrop->count = $validated['count'];
+    $inventoryCrop->latitude = $validated['latitude'] ?? null; // Update latitude, set to null if not provided
+    $inventoryCrop->longitude = $validated['longitude'] ?? null; // Update longitude, set to null if not provided
     $inventoryCrop->save();
 
     return redirect()->back()->with('success', 'Plant count updated successfully.');
 }
+
 
 
 

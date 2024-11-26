@@ -70,46 +70,50 @@
 </div>
 
 <!-- Display the list of plants and varieties -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 text-success">PLANT LISTS</h6>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-12">
-                <table class="table table-bordered mb-4">
-                    <thead>
-                        <tr>
-                            <th>Name of Plants</th>
-                            <th>Variety Name</th>
-                            <th>Actions</th> <!-- Actions Column for Edit and Delete -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($plants as $plant)
-                            <tr>
-                                <td>{{ $plant->name_of_plants }}</td>
-                                <td>
-                                    @foreach($plant->varieties as $variety)
-                                        <span style="font-style: italic;">{{ $variety->variety_name }}</span><br>
-                                    @endforeach
-                                </td>
-                                <td>
-                                    
-                                    <!-- Edit Button to trigger modal -->
-                                    <button class="btn btn-warning btn-sm" onclick="editPlant({{ $plant }})"><i class="fas fa-edit"></i></button>
+<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 text-success">PLANT LISTS</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mb-4">
+                            <thead>
+                                <tr>
+                                    <th>Name of Plants</th>
+                                    <th>Variety Name</th>
+                                    <th>Actions</th> <!-- Actions Column for Edit and Delete -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($plants as $plant)
+                                    <tr>
+                                        <td>{{ $plant->name_of_plants }}</td>
+                                        <td>
+                                            @foreach($plant->varieties as $variety)
+                                                <span style="font-style: italic;">{{ $variety->variety_name }}</span><br>
+                                            @endforeach
+                                        </td>
+                                        <td>
+                                            <!-- Edit Button to trigger modal -->
+                                            <button class="btn btn-warning btn-sm" onclick="editPlant({{ $plant }})"><i class="fas fa-edit"></i></button>
 
-                                    <!-- Delete Button to trigger modal -->
-                                    <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ $plant->id }})"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                            <!-- Delete Button to trigger modal -->
+                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ $plant->id }})"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Edit Plant Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">

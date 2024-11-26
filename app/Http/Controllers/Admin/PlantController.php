@@ -23,10 +23,8 @@ class PlantController extends Controller
         // Validate the incoming request with uniqueness check
         $request->validate([
             'name_of_plants' => 'required|string|max:255|unique:plants,name_of_plants', // Unique validation for plant name
-            'variety_name' => 'required|string|max:255|unique:plant_varieties,variety_name', // Unique validation for variety name
         ], [
             'name_of_plants.unique' => 'This plant already exists.', // Custom message for plant uniqueness
-            'variety_name.unique' => 'This variety already exists.', // Custom message for variety uniqueness
         ]);
 
         // Create the plant

@@ -18,6 +18,7 @@ class InventoryValuedCrop extends Model
         'latitude',
         'longitude',
         'added_by',
+        'image_path',
     ];
 
     // Define relationships if needed
@@ -38,5 +39,10 @@ class InventoryValuedCrop extends Model
     {
         return $this->belongsTo(User::class, 'added_by');
     }
+    public function inventoryValuedCrop()
+    {
+        return $this->hasOne(InventoryValuedCrop::class, 'farmer_id');
+    }
+
 
 }

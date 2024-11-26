@@ -24,7 +24,8 @@ class RoleController extends Controller
         $users = User::with('role')->get();
 
         $roles = Role::whereIn('id', [1, 3])->get();
-        $affiliations = Affiliation::all();
+
+        $affiliations = Affiliation::select('name_of_barangay')->distinct()->get(); // Kumuha lang ng mga unique na barangay
         return view('admin.roles.createUser', compact('roles', 'affiliations', 'users'), [
             'title' => 'Create User',
             'users' => User::all()
@@ -33,35 +34,44 @@ class RoleController extends Controller
 
 
     public function storeUser(Request $request)
-    {
-        // Validate the incoming request
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'extension' => 'nullable|string|max:10',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'role_id' => 'required|exists:roles,id',
-            'affiliation_id' => 'required|exists:affiliations,id',
-        ]);
-        
+{
+    // Validate the incoming request
+    $validated = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'middle_name' => 'nullable|string|max:255',
+        'extension' => 'nullable|string|max:10',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+        'role_id' => 'required|exists:roles,id',
+        'name_of_barangay' => 'required|string|exists:affiliations,name_of_barangay',
+    ]);
+    
+    // Kumuha ng affiliation ng barangay
+    $affiliation = Affiliation::where('name_of_barangay', $validated['name_of_barangay'])->first();
 
-        // Create a new user and assign the validated data
-        $user = new User();
-        $user->first_name = $validated['first_name'];
-        $user->last_name = $validated['last_name'];
-        $user->middle_name   = $validated['middle_name'];
-        $user->extension = $validated['extension'];
-        $user->email = $validated['email'];
-        $user->password = bcrypt($validated['password']); // Encrypt the password
-        $user->role_id = $validated['role_id']; // Assign role ID
-        $user->affiliation_id = $validated['affiliation_id']; // Assign affiliation ID
-        $user->save(); // Save the user to the database
+    // Create a new user and assign the validated data
+    $user = new User();
+    $user->first_name = $validated['first_name'];
+    $user->last_name = $validated['last_name'];
+    $user->middle_name = $validated['middle_name'];
+    $user->extension = $validated['extension'];
+    $user->email = $validated['email'];
+    $user->password = bcrypt($validated['password']); // Encrypt the password
+    $user->role_id = $validated['role_id']; // Assign role ID
 
-        // Redirect back with success message
-        return redirect()->route('admin.roles.createUser')->with('success', 'User created successfully.');
+    // I-assign ang affiliation_id batay sa nakuha na barangay
+    if ($affiliation) {
+        $user->affiliation_id = $affiliation->id; // Assign affiliation ID based on barangay
     }
+
+    $user->save(); // Save the user to the database
+
+    // Redirect back with success message
+    return redirect()->route('admin.roles.createUser')->with('success', 'User created successfully.');
+}
+
+    
     public function editUser($id)
     {
         $user = User::findOrFail($id);

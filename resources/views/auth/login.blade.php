@@ -13,6 +13,23 @@
                     <div class="text-center mb-4">
                         <h1 class="h4 text-gray-900">Welcome Back!</h1>
                     </div>
+
+                    <!-- Display error message if credentials are invalid -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @elseif (session('no_account'))
+                        <!-- Display a message if there is no account associated with the email -->
+                        <div class="alert alert-warning">
+                            {{ session('no_account') }}
+                        </div>
+                    @endif
+
                     <form class="user" method="POST" action="{{ route('login') }}">
                         @csrf
                         <div class="form-group">

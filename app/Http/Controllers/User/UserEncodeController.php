@@ -9,12 +9,17 @@ use App\Models\Plant; // Assuming you have a Plant model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use thiagoalessio\TesseractOCR\TesseractOCR;
 
 
 class UserEncodeController extends Controller
 {
     public function count()
     {
+        // Retrieve all farmers and plants for the form
+        $farmers = Farmer::all();
+        $plants = Plant::all();
+        
         // Get the currently logged-in user's ID
         $userId = auth()->id();
 
@@ -23,9 +28,7 @@ class UserEncodeController extends Controller
                             ->where('added_by', $userId)
                             ->get(); 
 
-        // Retrieve all farmers and plants for the form
-        $farmers = Farmer::all();
-        $plants = Plant::all();
+        
 
         // Return the view with the filtered data
         return view('user.encode.create_count', compact('inventoryCrops', 'farmers', 'plants'), [
@@ -34,67 +37,106 @@ class UserEncodeController extends Controller
     }
 
 
-    public function fetchFarmers(Request $request)
-    {
-        \Log::info('Fetching farmers with query: ' . $request->input('query')); // Debug log
-
-        // Retrieve the query and affiliation ID from the request
-        $query = $request->input('query');
-        $affiliationId = $request->input('affiliation_id');
-
-        // Fetch farmers filtered by affiliation_id and search query
-        $farmers = Farmer::where('affiliation_id', $affiliationId)
-                         ->where(function($q) use ($query) {
-                             $q->where('first_name', 'like', "%{$query}%")
-                               ->orWhere('last_name', 'like', "%{$query}%");
-                         })
-                         ->get(['id', 'first_name', 'last_name']);
-
-        return response()->json($farmers);
-    }
 
 
 
     public function store(Request $request)
-{
-    // Get the authenticated user
-    $user = Auth::user();
+    {
+        // Get the authenticated user
+        $user = Auth::user();
 
-    // Check if the user is logged in
-    if (!$user) {
-        return redirect()->back()->withErrors(['user' => 'User not authenticated.']);
+        if (!$user) {
+            return redirect()->back()->withErrors(['user' => 'User not authenticated.']);
+        }
+
+        // Validate the input
+        $request->validate([
+            'plant_id' => 'required|exists:plants,id',
+            'count' => 'required|integer|min:1',
+            'image' => 'nullable|image|max:10240',  // Make image optional
+        ]);
+
+        // Initialize variables for latitude and longitude
+        $latitude = $longitude = null;
+        $imagePath = null;
+
+        // Handle the uploaded image
+        if ($request->hasFile('image')) {
+            // Store the image in the public storage
+            $imagePath = $request->file('image')->store('images', 'public');
+            $imageFullPath = storage_path('app/public/' . $imagePath);
+
+            try {
+                // Run OCR using Tesseract
+                $ocrText = (new TesseractOCR($imageFullPath))
+                    ->executable('C:\Program Files\Tesseract-OCR\tesseract.exe')
+                    ->lang('eng')
+                    ->run();
+
+                // Log the OCR output for debugging
+                \Log::info('OCR Output: ' . $ocrText);
+
+                if (empty($ocrText)) {
+                    throw new \Exception('No text detected in the image.');
+                }
+
+                // Extract coordinates from OCR text
+                $coordinates = $this->extractCoordinatesFromText($ocrText);
+
+                if ($coordinates) {
+                    $latitude = $coordinates['latitude'];
+                    $longitude = $coordinates['longitude'];
+                } else {
+                    throw new \Exception('Coordinates not found in the image text.');
+                }
+            } catch (\Exception $e) {
+                return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
+            }
+        }
+
+        // Get the farmer associated with the logged-in user
+        $farmer = $user->farmer; // Assuming a relationship exists between User and Farmer
+
+        if (!$farmer || $farmer->affiliation_id !== $user->affiliation_id) {
+            return redirect()->back()->withErrors(['farmer_id' => 'The selected farmer does not belong to your affiliation.']);
+        }
+
+        // Create the new inventory record
+        InventoryValuedCrop::create([
+            'farmer_id' => $farmer->id,  // Use the farmer ID associated with the logged-in user
+            'plant_id' => $request->input('plant_id'),
+            'count' => $request->input('count'),
+            'latitude' => $latitude,  // Store latitude
+            'longitude' => $longitude,  // Store longitude
+            'added_by' => $user->id,  // Save the ID of the logged-in user
+            'image_path' => $imagePath,  // Save the image path or null if no image
+        ]);
+
+        return redirect()->route('user.count.count')->with('success', 'Crop added successfully.');
     }
 
-    // Validate the input, including latitude and longitude
-    $request->validate([
-        'farmer_id' => 'required|exists:farmers,id',
-        'plant_id' => 'required|exists:plants,id',
-        'count' => 'required|integer|min:1',
-        'latitude' => 'required|numeric',   // Validation for latitude
-        'longitude' => 'required|numeric',  // Validation for longitude
-    ]);
+    /**
+     * Extract coordinates (latitude and longitude) from the OCR text.
+     *
+     * @param string $ocrText
+     * @return array|null
+     */
+    private function extractCoordinatesFromText($ocrText)
+    {
+        // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
+        preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
 
-    // Get the farmer based on the provided farmer_id
-    $farmer = Farmer::find($request->input('farmer_id'));
+        if (count($matches) > 2) {
+            return [
+                'latitude' => $matches[1],
+                'longitude' => $matches[2],
+            ];
+        }
 
-    // Check if the farmer belongs to the same affiliation
-    if ($farmer->affiliation_id !== $user->affiliation_id) {
-        return redirect()->back()->withErrors(['farmer_id' => 'The selected farmer does not belong to your affiliation.']);
+        return null;  // Return null if no coordinates found
     }
 
-    // Create a new inventory valued crop
-    InventoryValuedCrop::create([
-        'farmer_id' => $farmer->id, // Use the farmer ID from the request
-        'plant_id' => $request->input('plant_id'),
-        'count' => $request->input('count'),
-        'latitude' => $request->input('latitude'), // Store latitude
-        'longitude' => $request->input('longitude'), // Store longitude
-        'added_by' => $user->id, // Store the ID of the logged-in user
-    ]);
 
-    // Redirect to the count view with a success message
-    return redirect()->route('user.count.count')->with('success', 'Crop added successfully.');
-}
 
 
 
@@ -107,50 +149,60 @@ class UserEncodeController extends Controller
         // Hanapin ang crop gamit ang ibinigay na id
         $crop = InventoryValuedCrop::findOrFail($id);
 
-        // Kunin ang farmer id mula sa crop record
-        $farmerId = $crop->farmer_id;
+        // Kunin ang farmer mula sa crop record
+        $farmer = Farmer::find($crop->farmer_id); // Get the farmer record
 
         // I-retrieve ang inventory crops para sa farmer kasama ang kanilang IDs
-        $inventoryCrops = InventoryValuedCrop::with('plant')->where('farmer_id', $farmerId)->get();
+        $inventoryCrops = InventoryValuedCrop::with('plant')->where('farmer_id', $crop->farmer_id)->get();
 
-        // Ibalik ang view kasama ang crop, farmer id, at inventory crops
-        return view('user.inventory.edit', compact('crop', 'inventoryCrops', 'farmerId'));
+        // Ibalik ang view kasama ang crop, farmer, at inventory crops
+        return view('user.inventory.edit', compact('crop', 'inventoryCrops', 'farmer'));
     }
+
+
 
     public function update(Request $request, $id)
 {
-    // Validate the incoming data
+    // Validate incoming data, without using arrays since only one crop is being edited
     $request->validate([
-        'name_of_plants.*' => 'required|string|max:255',
-        'count.*' => 'required|integer|min:0',
-        'latitude.*' => 'required|regex:/^-?\d+(\.\d+)?$/|between:-90,90',
-        'longitude.*' => 'required|regex:/^-?\d+(\.\d+)?$/|between:-180,180',
-        'crop_ids.*' => 'exists:inventory_valued_crops,id', // Ensure the crop IDs are valid
+        'name_of_plants' => 'required|string|max:255',
+        'count' => 'required|integer|min:0',
+        'latitude' => 'required|regex:/^-?\d+(\.\d+)?$/|between:-90,90',
+        'longitude' => 'required|regex:/^-?\d+(\.\d+)?$/|between:-180,180',
+        'crop_id' => 'required|exists:inventory_valued_crops,id', // Ensure crop ID exists in the table
     ]);
 
-    // Loop through the crop IDs to update each one
-    foreach ($request->crop_ids as $cropId) {
-        $crop = InventoryValuedCrop::find($cropId);
-        
-        if ($crop) {
-            // Get the plant name for this crop and find or create the plant entry
-            $plantName = $request->input("name_of_plants.$cropId");
-            $plant = Plant::firstOrCreate(['name_of_plants' => $plantName]);
+    // Retrieve the specific crop record using the provided crop ID
+    $crop = InventoryValuedCrop::find($request->crop_id);
 
-            // Update crop's details
-            $crop->plant_id = $plant->id;
-            $crop->count = $request->input("count.$cropId");
-            $crop->latitude = $request->input("latitude.$cropId");
-            $crop->longitude = $request->input("longitude.$cropId");
+    if ($crop) {
+        // Get the plant name, count, latitude, and longitude for this crop
+        $plantName = $request->input("name_of_plants");
+        $count = $request->input("count");
+        $latitude = $request->input("latitude");
+        $longitude = $request->input("longitude");
 
-            // Save changes
-            $crop->save();
-        }
+        // Find or create a plant entry with the given name
+        $plant = Plant::firstOrCreate(['name_of_plants' => $plantName]);
+
+        // Update the crop's details
+        $crop->plant_id = $plant->id;
+        $crop->count = $count;
+        $crop->latitude = $latitude;
+        $crop->longitude = $longitude;
+
+        // Save the changes to the crop
+        $crop->save();
+
+        // Redirect back with a success message
+        return redirect()->route('user.count.count')->with('success', 'Plant details updated successfully.');
+    } else {
+        // If the crop ID does not exist, return an error message
+        return redirect()->back()->withErrors("Crop with ID {$request->crop_id} not found.");
     }
-
-    // Redirect back with a success message
-    return redirect()->route('user.count.count')->with('success', 'Plant details updated successfully.');
 }
+
+
 
 
 

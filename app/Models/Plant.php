@@ -29,4 +29,9 @@ class Plant extends Model
     {
         return $this->hasMany(MonthlyInventory::class);
     }
+    public function monthlyRecords() 
+    {
+    return $this->hasMany(MonthlyRecord::class);
+    }
+    
 }

@@ -23,48 +23,148 @@
 
         <form action="{{ route('aggregator.farmers.store') }}" method="POST">
             @csrf
+
             <!-- Farmer Details Section -->
             <div class="form-row mb-3">
-                <div class="col">
+                <div class="col-12 col-md-6">                    
                     <label for="first_name">First Name <span style="color: red;">*</span></label>
                     <input type="text" name="first_name" placeholder="First name" class="form-control form-control-sm" required>
                 </div>
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="last_name">Last Name <span style="color: red;">*</span></label>
                     <input type="text" name="last_name" placeholder="Last name" class="form-control form-control-sm" required>
                 </div>
             </div>
 
             <div class="form-row mb-3">
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="middle_name">Middle Name (Optional)</label>
                     <input type="text" name="middle_name" placeholder="Middle Initial" class="form-control form-control-sm">
                 </div>
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="extension">Extension (e.g., Jr, Sr)</label>
                     <input type="text" name="extension" placeholder="jr, sr, etc." class="form-control form-control-sm">
                 </div>
             </div>
 
+            <!-- Control Number and Birthdate -->
+            <div class="form-row mb-3">
+                <div class="col-12 col-md-6">
+                    <label for="control_number">Reference No. / Control No.</label>
+                    <input type="text" name="control_number" id="control_number" placeholder="08-64-02-037-000001" class="form-control form-control-sm" value="{{ old('control_number') }}" readonly>            
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="birthdate">Birthdate</label>
+                    <input type="date" name="birthdate" id="birthdate" class="form-control form-control-sm">
+                </div>
+            </div>
+
+            <!-- Barangay and Association Fields UPDATED-->
             <div class="form-row mb-3">
                 <div class="col">
-                    <label for="affiliation_id">Affiliation</label>
-                    <select name="affiliation_id" class="form-control form-control-sm">
-                        @foreach($affiliations as $affiliation)
-                            <option value="{{ $affiliation->id }}">{{ $affiliation->name_of_association ?? $affiliation->name_of_barangay }}</option>
-                        @endforeach
-                    </select>
+                    <label for="barangay">Barangay</label>
+                    <input list="barangays" name="name_of_barangay" placeholder="Select Barangay" class="form-control form-control-sm">
+                    <datalist id="barangays">
+                        @foreach($uniqueBarangays as $barangay)
+                            <option value="{{ $barangay }}">
+                            <option value="Beniton"></option>
+                            <option value="Buenavista"></option>
+                            <option value="Anahao"></option>
+                            <option value="Taytagan"></option>
+                            <option value="Dao"></option>
+                            <option value="Divisoria"></option>
+                            <option value="Esperanza"></option>
+                            <option value="Hilaan"></option>
+                            <option value="Himakilo"></option>
+                            <option value="Malbago"></option>
+                            <option value="Mauylab"></option>
+                            <option value="Paku"></option>
+                            <option value="Catoogan"></option>
+                            <option value="Lawgawan"></option>
+                            <option value="Lanao"></option>
+                            <option value="Poblacion"></option>
+                            <option value="Santa Cruz"></option>
+                            <option value="San Ramon"></option>
+                            <option value="Santo Niño"></option>
+                            <option value="Sampongon"></option>
+                            <option value="Talisay"></option>
+                            <option value="Hitawos"></option>
+                            <option value="Tuburan"></option>
+                            <option value="Union"></option>
+                            <option value="Taa"></option>
+                            <option value="Cawayanan"></option>
+                            <option value="Mahayahay"></option>
+                            <option value="San Vicente"></option>
+                            <option value="Olisihan"></option>
+                            <option value="Bunga"></option>
+                            <option value="Pamahawan"></option>
+                            <option value="Pangi"></option>
+                            <option value="Hibagwan"></option>
+                            <option value="Pamigsian"></option>
+                            <option value="Casao"></option>
+                            <option value="Catmon"></option>
+                            <option value="Guinsangaan"></option>
+                            <option value="Pong-on"></option>
+                            <option value="Banahao"></option>
+                            <option value="Baugo"></option>
+                            @endforeach
+                    </datalist>
                 </div>
 
-                <div class="col">
+                <div class="col-12 col-md-6">
+                    <label for="association">Association</label>
+                    <input type="text" name="name_of_association" id="association" class="form-control form-control-sm" placeholder="Optional Association" list="association-list">
+                    <datalist id="association-list">
+                        @foreach($uniqueAssociations as $association)
+                            <option value="{{ $association }}">
+                        @endforeach
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="form-row mb-3">
+                <!-- <div class="col-12 col-md-6">
+                    <label for="affiliation">Affiliation</label>
+                    <input type="text" id="affiliation" name="affiliation" class="form-control form-control-sm" placeholder="Type to search..." list="affiliations-list" >
+                    <datalist id="affiliations-list">
+                        @foreach($affiliations as $affiliation)
+                            <option value="{{ $affiliation->name_of_association }} - {{ $affiliation->name_of_barangay }}" data-id="{{ $affiliation->id }}"></option>
+                        @endforeach
+                    </datalist>
+                    <input type="hidden" id="affiliation_id" name="affiliation_id">
+                </div>
+
+                <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const affiliationInput = document.getElementById('affiliation');
+                    const affiliationIdInput = document.getElementById('affiliation_id');
+
+                    affiliationInput.addEventListener('input', function () {
+                        const value = this.value;
+
+                        const selectedOption = [...document.querySelectorAll('#affiliations-list option')]
+                            .find(option => option.value === value);
+
+                        if (selectedOption) {
+                            affiliationIdInput.value = selectedOption.dataset.id; // Set the hidden input with the id
+                        } else {
+                            affiliationIdInput.value = ''; // Clear the hidden input if no match
+                        }
+                    });
+                });
+                </script> -->
+
+
+                <div class="col-12 col-md-6">
                     <label for="email">Email Address (Optional)</label>
                     <input type="email" name="email" placeholder="Email address" class="form-control form-control-sm">
                 </div>
-                <div class="col">
+
+                <div class="col-12 col-md-6">
                     <label for="password">Password (Optional)</label>
                     <input type="password" name="password" placeholder="************" class="form-control form-control-sm">
                 </div>
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="password_confirmation">Confirm Password (Optional)</label>
                     <input type="password" name="password_confirmation" placeholder="************" class="form-control form-control-sm">
                 </div>
@@ -73,7 +173,6 @@
             </div>
 
             <button type="submit" class="btn btn-danger">SAVE</button>
-            <a href="{{ route('affiliations.index')}}" class="btn btn-warning">Add Affiliation</a>
         </form>
     </div>
 </div>
@@ -85,25 +184,75 @@
         <h6 class="m-0 text-success">FARMER LISTS</h6>
     </div>
     <div class="card-body">
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <!-- Search Bar -->
+        <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by Name, Barangay, Association, or Control Number" style="max-width: 300px;" onkeyup="filterFarmersTable()">
+        <!-- JavaScript for Filtering Table -->
+        <script>
+            function filterFarmersTable() {
+                // Get input from the search bar
+                const query = document.getElementById("searchBar").value.toLowerCase();
+                const table = document.getElementById("farmersTable");
+                const rows = table.getElementsByTagName("tr");
 
-        <table class="table table-bordered">
+                // Loop through all table rows (except the header)
+                for (let i = 1; i < rows.length; i++) {
+                    const surnameCell = rows[i].getElementsByTagName("td")[1];
+                    const firstnameCell = rows[i].getElementsByTagName("td")[2];
+                    const barangayCell = rows[i].getElementsByTagName("td")[3];
+                    const associationCell = rows[i].getElementsByTagName("td")[4];
+                    const controlNumberCell = rows[i].getElementsByTagName("td")[5];
+
+                    if (surnameCell && firstnameCell && barangayCell && associationCell && controlNumberCell) {
+                        const surname = surnameCell.textContent.toLowerCase();
+                        const firstname = firstnameCell.textContent.toLowerCase();
+                        const barangay = barangayCell.textContent.toLowerCase();
+                        const association = associationCell.textContent.toLowerCase();
+                        const controlNumber = controlNumberCell.textContent.toLowerCase();
+
+                        // Check if the query matches any of the fields
+                        if (
+                            surname.includes(query) || 
+                            firstname.includes(query) || 
+                            barangay.includes(query) || 
+                            association.includes(query) || 
+                            controlNumber.includes(query)
+                        ) {
+                            rows[i].style.display = ""; // Show row
+                        } else {
+                            rows[i].style.display = "none"; // Hide row
+                        }
+                    }
+                }
+            }
+        </script>
+        <br>
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-bordered" id="farmersTable">
             <thead>
                 <tr>
+                    <th>id</th>
                     <th>First Name</th>
                     <th>Last Name</th>
-                    <th>Affiliation</th>
+                    <th>Barangay</th>
+                    <th>Association</th>
+                    <th>Reference no. / Control no.</th>
                     <th>Added by</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
+                    @php
+                        $count =1;
+                    @endphp
                 @foreach($farmers as $farmer)
                     <tr>
+                        <td>{{ $count++ }}</td>
                         <td>{{ $farmer->first_name }}</td>
                         <td>{{ $farmer->last_name }}</td>
-                        <td>{{ $farmer->affiliation->name_of_association ?? $farmer->affiliation->name_of_barangay ?? 'N/A' }}</td>
-                        <td><span style="font-style: italic;">{{ $farmer->addedBy->role->role_name ?? 'N/A' }}</span></td>
+                        <td>{{$farmer->affiliation->name_of_barangay}} </td>
+                        <td>{{ $farmer->affiliation->name_of_association ?? 'N/A'}}</td>
+                        <td>{{ $farmer->control_number }}</td>
+                        <td><span style="font-style: normal;">{{ $farmer->addedBy->first_name ?? 'N/A' }}</span> / <span style="font-style: italic;">{{ $farmer->addedBy->role->role_name ?? 'N/A' }}</span></td>
                         <td>
                             <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#viewModal-{{ $farmer->id }}"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal-{{ $farmer->id }}"><i class="fas fa-edit"></i></button>
@@ -126,7 +275,11 @@
                                     <p><strong>Last Name:</strong> {{ $farmer->last_name }}</p>
                                     <p><strong>Middle Name:</strong> {{ $farmer->middle_name }}</p>
                                     <p><strong>Extension:</strong> {{ $farmer->extension }}</p>
-                                    <p><strong>Affiliation:</strong> {{ $farmer->affiliation->name_of_association ?? $farmer->affiliation->name_of_barangay ?? 'N/A' }}</p>
+                                    <p><strong>Barangay:</strong> {{ $farmer->affiliation->name_of_barangay ?? 'N/A' }}</p>
+                                    <p><strong>Association:</strong> {{ $farmer->affiliation->name_of_association ?? 'N/A' }}</p>
+                                    <p><strong>Reference no. / Control no.:</strong> {{ $farmer->control_number }}</p>
+                                    <p><strong>Birthdate:</strong> {{ $farmer->birthdate }}</p>
+
                                     <p><strong>Email:</strong> {{ optional($farmer->user)->email ?? 'N/A' }}</p> <!-- Use optional() to avoid errors -->
                                     <p><strong>Added By:</strong> {{ optional($farmer->addedBy->role)->role_name ?? 'N/A' }}</p> <!-- Use optional() for safety -->
                                 </div>
@@ -152,6 +305,7 @@
                                     @csrf
                                     @method('PUT')
                                     <div class="modal-body">
+                                        <!-- Farmer Information -->
                                         <div class="form-row mb-3">
                                             <div class="col">
                                                 <label for="first_name">First Name <span style="color: red;">*</span></label>
@@ -177,16 +331,41 @@
                                                 <label for="affiliation_id">Affiliation</label>
                                                 <select name="affiliation_id" class="form-control form-control-sm">
                                                     @foreach($affiliations as $affiliation)
-                                                        <option value="{{ $affiliation->id }}" {{ $affiliation->id == $farmer->affiliation_id ? 'selected' : '' }}>{{ $affiliation->name_of_association ?? $affiliation->name_of_barangay }}</option>
+                                                        <option value="{{ $affiliation->id }}" {{ $affiliation->id == $farmer->affiliation_id ? 'selected' : '' }}>{{ $affiliation->name_of_barangay}} - {{ $affiliation->name_of_association}}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                             <div class="col">
-                                                <label for="email">Email Address (Optional)</label>
-                                                <input type="email" name="email" value="{{ $farmer->user->email ?? '' }}" class="form-control form-control-sm">
+                                                <label for="birthdate">Birthdate</label>
+                                                <input type="date" name="birthdate" value="{{ $farmer->birthdate }}" class="form-control form-control-sm">
                                             </div>
                                         </div>
-                                        <input type="hidden" name="role_id" value="2">
+
+                                        <!-- Account Information Toggle -->
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="addAccount-{{ $farmer->id }}" name="add_account" onchange="toggleAccountFields({{ $farmer->id }})" {{ $farmer->user ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="addAccount-{{ $farmer->id }}">Add/Edit Account</label>
+                                        </div>
+
+                                        <!-- Account Fields (Show/Hide based on checkbox) -->
+                                        <div id="accountFields-{{ $farmer->id }}" class="account-fields {{ $farmer->user ? '' : 'd-none' }}">
+                                            <div class="form-row mb-3">
+                                                <div class="col">
+                                                    <label for="email">Email Address</label>
+                                                    <input type="email" name="email" value="{{ $farmer->user->email ?? '' }}" class="form-control form-control-sm">
+                                                </div>
+                                                <div class="col">
+                                                    <label for="password">Password</label>
+                                                    <input type="password" name="password" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
+                                            <div class="form-row mb-3">
+                                                <div class="col">
+                                                    <label for="password_confirmation">Confirm Password</label>
+                                                    <input type="password" name="password_confirmation" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="submit" class="btn btn-success">Update</button>
@@ -196,6 +375,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                        function toggleAccountFields(id) {
+                            const accountFields = document.getElementById(`accountFields-${id}`);
+                            accountFields.classList.toggle('d-none');
+                        }
+                    </script>
+
 
                     <!-- Delete Modal -->
                     <div class="modal fade" id="deleteModal-{{ $farmer->id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">

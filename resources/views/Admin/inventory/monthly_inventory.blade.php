@@ -55,6 +55,8 @@
                 <th rowspan="2" class="sub-header">LATITUDE</th>
                 <th rowspan="2" class="sub-header">LONGITUDE</th>
                 <th rowspan="2" class="sub-header">REFERENCE NO. / REFERENCE NO.</th>
+                <th rowspan="2" class="sub-header">BIRTHDATE</th>
+                <th rowspan="2" class="sub-header">AFFILIATION</th>
 
 
             </tr>

@@ -23,104 +23,52 @@
                 </div>
             @endif
 
-            <form action="{{ route('user.count.store') }}" method="POST" id="crop-form">
-                @csrf
-                <div class="form-row">
-                    <!-- Farmer input with datalist -->
-                    <div class="form-group col-md-4">
-                        <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
+                <!-- Show the form to add crop data -->
+                <form action="{{ route('user.count.store') }}" method="POST" enctype="multipart/form-data" id="crop-form">
+                    @csrf
+                    <div class="form-row">
+                        <!-- Fixed Farmer Name Input -->
+                        <div class="form-group col-md-4">
+                            <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
+                            <input type="text" id="farmer_name" name="farmer_name" class="form-control" value="{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}" readonly>
+                            <input type="hidden" name="farmer_id" id="farmer_id" value="{{ Auth::user()->id }}">
+                            <input type="hidden" id="affiliation_id" value="{{ Auth::user()->affiliation_id }}"> 
+                            @if ($errors->has('farmer_id'))
+                                <span class="text-danger">{{ $errors->first('farmer_id') }}</span>
+                            @endif
+                        </div>
+
+
+                        <!-- Plant input -->
+                        <div class="form-group col-md-4">
+                            <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
+                            <input list="plants" id="plant_name" name="plant_name" placeholder="Enter Plant" class="form-control" required>
+                            <datalist id="plants">
+                                @foreach($plants as $plant)
+                                    <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
+                                @endforeach
+                            </datalist>
+                            <input type="hidden" name="plant_id" id="plant_id">
+                        </div>
+
+                        <!-- Count input -->
+                        <div class="form-group col-md-4">
+                            <label for="count">Count <span style="color: red;">*</span></label>
+                            <input type="number" name="count" placeholder="Enter Count" class="form-control" required>
+                        </div>
+
+                        <!-- Image upload field -->
+                        <div class="form-group col-md-4">
+                            <label for="image">Upload Image <span style="color: red;">*</span></label>
+                            <input type="file" name="image" id="image" class="form-control" accept="image/*" >
+                        </div>
                         
-                        <!-- Farmer name input -->
-                        <input type="text" id="farmer_name" name="farmer_name" class="form-control" list="farmers" autocomplete="off" required>
-                        <datalist id="farmers">
-                            <!-- Options will be loaded via Ajax -->
-                        </datalist>
-                        
-                        <!-- Hidden input for farmer ID -->
-                        <input type="hidden" name="farmer_id" id="farmer_id" value="{{ old('farmer_id') }}">
-                        <input type="hidden" id="affiliation_id" value="{{ Auth::user()->affiliation_id }}"> 
 
-                        <!-- Error message display -->
-                        @if ($errors->has('farmer_id'))
-                            <span class="text-danger">{{ $errors->first('farmer_id') }}</span>
-                        @endif
                     </div>
 
-                    <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const farmerNameInput = document.getElementById('farmer_name');
-                        const farmerIdInput = document.getElementById('farmer_id');
-                        const farmersDatalist = document.getElementById('farmers');
-
-                        farmerNameInput.addEventListener('input', function () {
-                            const query = this.value;
-                            const affiliationIdInput = document.getElementById('affiliation_id');
-                            const affiliationId = affiliationIdInput ? affiliationIdInput.value : null; // Safely get the value
-
-                            if (query.length > 1 && affiliationId) {
-                                fetch(`/user/hvcdp/fetch-farmers?query=${query}&affiliation_id=${affiliationId}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        farmersDatalist.innerHTML = ''; // Clear existing options
-
-                                        data.forEach(farmer => {
-                                            const option = document.createElement('option');
-                                            option.value = `${farmer.first_name} ${farmer.last_name}`;
-                                            option.dataset.id = farmer.id;
-                                            farmersDatalist.appendChild(option);
-                                        });
-                                    })
-                                    .catch(error => console.error('Error fetching farmers:', error)); // Handle errors
-                            }
-                        }); 
-
-
-                        // Set farmer ID when selecting from datalist
-                        farmerNameInput.addEventListener('change', function () {
-                            const selectedOption = [...farmersDatalist.options].find(option => option.value === this.value);
-                            farmerIdInput.value = selectedOption ? selectedOption.dataset.id : '';
-                        });
-                    });
-                    </script>
-
-
-                    <!-- Plant input -->
-                    <div class="form-group col-md-4">
-                        <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
-                        <input list="plants" id="plant_name" name="plant_name" class="form-control" required>
-                        <datalist id="plants">
-                            @foreach($plants as $plant)
-                                <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
-                            @endforeach
-                        </datalist>
-                        <input type="hidden" name="plant_id" id="plant_id">
-                    </div>
-
-                    <!-- Count input -->
-                    <div class="form-group col-md-4">
-                        <label for="count">Count <span style="color: red;">*</span></label>
-                        <input type="number" name="count" class="form-control" required>
-                    </div>
-
-                     <!-- Latitude input -->
-                    <div class="form-group col-md-4">
-                        <label for="latitude">Latitude <span style="color: red;">*</span></label>
-                        <input type="text" name="latitude" class="form-control" required pattern="-?\d+(\.\d+)?">
-                        <small class="form-text text-muted">Format: -90 to 90</small>
-                    </div>
-
-                    <!-- Longitude input -->
-                    <div class="form-group col-md-4">
-                        <label for="longitude">Longitude <span style="color: red;">*</span></label>
-                        <input type="text" name="longitude" class="form-control" required pattern="-?\d+(\.\d+)?">
-                        <small class="form-text text-muted">Format: -180 to 180</small>
-                    </div>
-
-                </div>
-
-                <!-- Submit button -->
-                <button type="submit" class="btn btn-success">Add</button>
-            </form>
+                    <!-- Submit button -->
+                    <button type="submit" class="btn btn-success">Add</button>
+                </form>
 
             <script>
                 const farmerInput = document.getElementById('farmer_name');
@@ -155,174 +103,157 @@
                 <div class="card-body">
                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-bordered" id="inventory-table">
-                        <thead>
-                            <tr>
+                    <thead>
+                        <tr>
                             <th>Farmer</th>
                             <th>Plant</th>
                             <th>Count</th>
-                            <th>Latitude</th>  <!-- Column for Latitude -->
-                            <th>Longitude</th> <!-- Column for Longitude -->
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Date Added</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($inventoryCrops->groupBy('farmer_id') as $farmerId => $crops)
-                            <!-- Loop through each crop for the farmer -->
                             @foreach($crops as $index => $crop)
                                 <tr>
-                                    <!-- Display Farmer's Name only on the first row of each farmer group -->
                                     @if($index === 0)
                                         <td rowspan="{{ $crops->count() }}">
                                             {{ $crop->farmer->first_name }} {{ $crop->farmer->last_name }}
                                         </td>
                                     @endif
-
-                                    <!-- Plant Name -->
                                     <td>{{ $crop->plant->name_of_plants }}</td>
-
-                                    <!-- Plant Count -->
                                     <td>{{ $crop->count }}</td>
-
-                                    <!-- Latitude -->
                                     <td>{{ $crop->latitude }}</td>
-
-                                    <!-- Longitude -->
                                     <td>{{ $crop->longitude }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($crop->created_at)->format('F d, Y') }}</td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal-{{ $crops->first()->id }}">
+                                        <!-- Edit Button -->
+                                        <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal-{{ $crop->id }}">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
-                                        <!-- 
-                                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal-{{ $crop->id }}">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button> 
-                                        -->
-                                    </td>
-                                </tr>
-                                <!-- Edit Modal -->
-                                <div class="modal fade" id="editModal-{{ $crop->first()->id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editModalLabel">Edit Crop Details</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form action="{{ route('user.count.update', $crop->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('PUT')
 
-                                                    <!-- Loop through inventory crops -->
-                                                    @foreach($inventoryCrops as $inventoryCrop)
-                                                        <div class="form-group row">
-                                                            <div class="col-md-6">
-                                                                <label for="plant_name_{{ $inventoryCrop->id }}">Plant Name</label>
-                                                                <!-- Use a datalist for plant selection -->
+                                        <!-- Edit Modal -->
+                                        <div class="modal fade" id="editModal-{{ $crop->id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel-{{ $crop->id }}" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="editModalLabel-{{ $crop->id }}">Edit Crop Details</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form action="{{ route('user.count.update', $crop->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+
+                                                            <div class="form-group">
+                                                                <label for="plant_name_{{ $crop->id }}">Plant Name</label>
                                                                 <input 
                                                                     list="plantOptions" 
-                                                                    name="name_of_plants[{{ $inventoryCrop->id }}]" 
-                                                                    id="plant_name_{{ $inventoryCrop->id }}" 
-                                                                    value="{{ $inventoryCrop->plant->name_of_plants }}" 
+                                                                    name="name_of_plants" 
+                                                                    id="plant_name_{{ $crop->id }}" 
+                                                                    value="{{ $crop->plant->name_of_plants }}" 
                                                                     class="form-control"
+                                                                    required
                                                                 >
-                                                                <!-- Datalist with available plants -->
                                                                 <datalist id="plantOptions">
                                                                     @foreach($plants as $plant)
                                                                         <option value="{{ $plant->name_of_plants }}">{{ $plant->name_of_plants }}</option>
                                                                     @endforeach
                                                                 </datalist>
                                                             </div>
-                                                            <div class="col-md-6">
-                                                                <label for="count_{{ $inventoryCrop->id }}">Count</label>
+
+                                                            <div class="form-group">
+                                                                <label for="count_{{ $crop->id }}">Count</label>
                                                                 <input 
                                                                     type="number" 
-                                                                    name="count[{{ $inventoryCrop->id }}]" 
-                                                                    id="count_{{ $inventoryCrop->id }}" 
-                                                                    value="{{ $inventoryCrop->count }}" 
+                                                                    name="count" 
+                                                                    id="count_{{ $crop->id }}" 
+                                                                    value="{{ $crop->count }}" 
                                                                     class="form-control" 
                                                                     min="0"
+                                                                    required
                                                                 >
                                                             </div>
-                                                        </div>
 
-                                                        <!-- Latitude input -->
-                                                        <div class="form-group row">
-                                                            <div class="col-md-6">
-                                                                <label for="latitude_{{ $inventoryCrop->id }}">Latitude</label>
+                                                            <div class="form-group">
+                                                                <label for="latitude_{{ $crop->id }}">Latitude</label>
                                                                 <input 
                                                                     type="text" 
-                                                                    name="latitude[{{ $inventoryCrop->id }}]" 
-                                                                    id="latitude_{{ $inventoryCrop->id }}" 
-                                                                    value="{{ $inventoryCrop->latitude ?? '' }}" 
+                                                                    name="latitude" 
+                                                                    id="latitude_{{ $crop->id }}" 
+                                                                    value="{{ $crop->latitude }}" 
                                                                     class="form-control" 
-                                                                    pattern="-?\d+(\.\d+)?"
+                                                                    pattern="-?\d+(\.\d+)?" 
+                                                                    required
                                                                 >
                                                                 <small class="form-text text-muted">Format: -90 to 90</small>
                                                             </div>
-                                                            <div class="col-md-6">
-                                                                <label for="longitude_{{ $inventoryCrop->id }}">Longitude</label>
+
+                                                            <div class="form-group">
+                                                                <label for="longitude_{{ $crop->id }}">Longitude</label>
                                                                 <input 
                                                                     type="text" 
-                                                                    name="longitude[{{ $inventoryCrop->id }}]" 
-                                                                    id="longitude_{{ $inventoryCrop->id }}" 
-                                                                    value="{{ $inventoryCrop->longitude ?? '' }}" 
+                                                                    name="longitude" 
+                                                                    id="longitude_{{ $crop->id }}" 
+                                                                    value="{{ $crop->longitude }}" 
                                                                     class="form-control" 
-                                                                    required 
-                                                                    pattern="-?\d+(\.\d+)?"
+                                                                    pattern="-?\d+(\.\d+)?" 
+                                                                    required
                                                                 >
                                                                 <small class="form-text text-muted">Format: -180 to 180</small>
                                                             </div>
+
+                                                            <!-- Hidden input to send crop ID -->
+                                                            <input type="hidden" name="crop_id" value="{{ $crop->id }}">
+
+                                                            <button type="submit" class="btn btn-primary">Update</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+
+
+
+                                                <!-- Delete Modal -->
+                                                <!-- <div class="modal fade" id="deleteModal-{{ $crop->id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to delete the record with commodity <strong>{{ $crop->plant->name_of_plants }}</strong>?</p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <form action="{{ route('user.count.destroy', $crop->id) }}" method="POST">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                                </form>
+                                                            </div>
                                                         </div>
-
-                                                        <!-- Hidden input to send crop ID -->
-                                                        <input type="hidden" name="crop_ids[]" value="{{ $inventoryCrop->id }}">
-                                                    @endforeach
-
-                                                    <button type="submit" class="btn btn-primary">Update</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    </div>
+                                                </div> -->
+                                            @endforeach
+                                        @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-
-
-
-
-                                <!-- Delete Modal -->
-                                <!-- <div class="modal fade" id="deleteModal-{{ $crop->id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure you want to delete the record with commodity <strong>{{ $crop->plant->name_of_plants }}</strong>?</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <form action="{{ route('user.count.destroy', $crop->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
-                            @endforeach
-                        @endforeach
-                        </tbody>
-                    </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
     // Fade out success message after 5 seconds

@@ -3,33 +3,21 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
+
     /**
      * Where to redirect users after login.
      *
      * @var string
      */
     protected $redirectTo = '/home';
-
-
 
     /**
      * Create a new controller instance.
@@ -40,7 +28,7 @@ class LoginController extends Controller
     {
         $this->middleware('auth')->only('logout');
     }
-    
+
     /**
      * Show the login form.
      *
@@ -49,10 +37,10 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-        // If the user is already authenticated, redirect them based on their role
-        $user = Auth::user();
-        return $this->redirectUserBasedOnRole($user);
-    }
+            // If the user is already authenticated, redirect them based on their role
+            $user = Auth::user();
+            return $this->redirectUserBasedOnRole($user);
+        }
 
         // If not authenticated, show the login form
         return view('auth.login', [
@@ -73,6 +61,11 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required|string|min:8',
         ]);
+
+        // Check if a user exists with the provided email
+        if (!User::where('email', $request->email)->exists()) {
+            return redirect()->route('login')->withErrors(['email' => 'No account found with this email.']);
+        }
 
         // Attempt to authenticate the user using the provided credentials
         $credentials = $request->only('email', 'password');
@@ -124,7 +117,6 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
 
         return redirect()->route('login'); // Redirect to login page
     }

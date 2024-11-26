@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-success">ROLES MANAGEMENT / <span class="font-weight-bold">ADD NEW USER / USER LISTS </span></h6>
+        <h6 class="m-0 text-success"><span class="font-weight-bold">ADD AGGREGATOR USER / USER LISTS </span></h6>
     </div>
     <div class="card-body">
         @if (session('success'))
@@ -11,7 +11,7 @@
                 {{ session('success') }}
             </div>
         @endif
-        <form action="{{ route('admin.roles.storeUser') }}" method="POST">
+<form action="{{ route('admin.roles.storeUser') }}" method="POST">
             @csrf
 
             <div class="form-row mb-3">
@@ -38,17 +38,15 @@
 
             <div class="form-row mb-3">
                 <div class="col">
-                    <label for="affiliation_id">Affiliation</label>
-                    <select name="affiliation_id" class="form-control form-control-sm">
+                    <label for="name_of_barangay">Barangay</label>
+                    <input list="barangays" name="name_of_barangay" class="form-control form-control-sm" required placeholder="Select Barangay">
+                    <datalist id="barangays">
                         @foreach($affiliations as $affiliation)
-                            @if ($affiliation->name_of_association)
-                                <option value="{{ $affiliation->id }}">{{ $affiliation->name_of_association }}</option>
-                            @endif
                             @if ($affiliation->name_of_barangay)
-                                <option value="{{ $affiliation->id }}">{{ $affiliation->name_of_barangay }}</option>
+                                <option value="{{ $affiliation->name_of_barangay }}">
                             @endif
                         @endforeach
-                    </select>
+                    </datalist>
                 </div>
         
                 <div class="col">
@@ -79,10 +77,10 @@
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-danger">Add User</button>
-            <a href="{{ route('affiliations.index')}}" class="btn btn-warning">Add Affiliation</a>
+            <button type="submit" class="btn btn-danger">Add</button>
 
-        </form>
+        </form> 
+
     </div>
 </div>
 <hr>
@@ -99,6 +97,7 @@
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Email</th>
+                    <th>Barangay</th> <!-- Added Barangay Column -->
                     <th>Role</th>
                     <th>Actions</th> <!-- Added Actions Column -->
                 </tr>
@@ -109,6 +108,7 @@
                         <td>{{ $user->first_name }}</td>
                         <td>{{ $user->last_name }}</td>
                         <td>{{ $user->email }}</td>
+                        <td>{{ $user->affiliation ? $user->affiliation->name_of_barangay : 'N/A' }}</td>
                         <td>{{ $user->role->role_name }}</td>
                         <td>
                             <!-- Action buttons with modal triggers -->

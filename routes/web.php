@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CountController;
 use App\Http\Controllers\Admin\MonthlyInventoryController;
 
 
+
 use App\Http\Controllers\Auth\LoginController;
 //
 use App\Http\Controllers\Aggregator\AggregatorFarmersController;
@@ -52,6 +53,8 @@ Auth::routes();
 // Admin routes
 Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], function() {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/export-plant-summary', [DashboardController::class, 'exportPlantSummary'])->name('admin.exportPlantSummary');
+
 
 
     // Role management
@@ -62,6 +65,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         Route::get('/{id}/edit', [RoleController::class, 'editUser'])->name('editUser');
         Route::put('/{id}', [RoleController::class, 'updateUser'])->name('updateUser');
         Route::delete('/{id}', [RoleController::class, 'deleteUser'])->name('deleteUser');
+        
     });
 
     Route::resource('admin/affiliations', AffiliationController::class);
@@ -72,6 +76,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         Route::post('/', [AffiliationController::class, 'store'])->name('store');
         Route::put('/{id}', [AffiliationController::class, 'update'])->name('update');
         Route::delete('/{id}', [AffiliationController::class, 'destroy'])->name('destroy');
+
+        
     });
 
     // Plant management
@@ -83,20 +89,20 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
 
     });
 
-    Route::resource('farmers', FarmersController::class);
     // Farmer management
     Route::prefix('farmers')->name('admin.farmers.')->group(function() {
         Route::get('/', [FarmersController::class, 'index'])->name('index');
         Route::get('/create', [FarmersController::class, 'create'])->name('create');
         Route::post('/', [FarmersController::class, 'store'])->name('store');
+        Route::get('/{id}', [FarmersController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [FarmersController::class, 'edit'])->name('edit');
         Route::put('/{id}', [FarmersController::class, 'update'])->name('update');
         Route::delete('/{id}', [FarmersController::class, 'destroy'])->name('destroy');
 
         // web.php
         Route::get('/filter', [FarmersController::class, 'filter'])->name('filter');
+        Route::get('/get-associations/{barangay}', [FarmersController::class, 'getAssociations']);
 
-        Route::post('/import', [FarmersController::class, 'importExcel'])->name('import');
 
 
     });
@@ -114,6 +120,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
 
         Route::get('/print', [HVCDPController::class, 'print'])->name('print');
         Route::get('/export-excel', [HVCDPController::class, 'exportBarangay'])->name('exportExcel');
+        Route::post('extract-text', [YourController::class, 'extractTextFromImage']);
 
     });
 
@@ -141,9 +148,22 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         //EXPORTEXCEL
         Route::get('/inventory', [MonthlyInventoryController::class, 'print'])->name('printMonthlyInventory');
         // Export to Excel
-        Route::get('export-monthly-inventory-excel', [MonthlyInventoryController::class, 'exportMonthlyInventoryExcel'])
+        Route::get('export-monthly-inventory-excel/{month}/{year}', [MonthlyInventoryController::class, 'exportMonthlyInventoryExcel'])
             ->name('exportMonthlyInventoryExcel');
-            //
+
+
+        // Route para sa pag-view ng history records
+        Route::get('/history', [MonthlyInventoryController::class, 'showHistory'])->name('history');
+        Route::delete('history/{id}', [MonthlyInventoryController::class, 'delete'])->name('delete');
+        // VIEW EXCEL BEFORE DOWNLOADING
+        Route::get('preview/{month}/{year}', [MonthlyInventoryController::class, 'previewMonthlyInventory'])->name('previewMonthlyInventory');
+        Route::get('/fetch-inventory', [MonthlyInventoryController::class, 'fetchInventory']);
+        
+        // records previous
+        Route::get('previewHistory/{month}/{year}', [MonthlyInventoryController::class, 'previewHistory'])->name('previewHistory');
+        Route::get('exportHistory/{month}/{year}', [MonthlyInventoryController::class, 'exportHistory'])->name('exportHistory');
+        
+
     });
 
     
@@ -151,16 +171,17 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
 });
 
 
+
 // Aggregator routes 
 Route::group(['prefix' => 'aggregator', 'middleware' => ['auth','role:Aggregator']], function() {
     Route::get('/dashboard', [AggregatorDashboardController::class, 'index'])->name('aggregator.dashboard');
 
-    Route::resource('farmers', AggregatorFarmersController::class);
     // Farmer management
     Route::prefix('farmers')->name('aggregator.farmers.')->group(function() {
         Route::get('/', [AggregatorFarmersController::class, 'index'])->name('index');
         Route::get('/create', [AggregatorFarmersController::class, 'create'])->name('create');
         Route::post('/', [AggregatorFarmersController::class, 'store'])->name('store');
+        Route::get('/{id}', [AggregatorFarmersController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [AggregatorFarmersController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AggregatorFarmersController::class, 'update'])->name('update');
         Route::delete('/{id}', [AggregatorFarmersController::class, 'destroy'])->name('destroy');
@@ -184,7 +205,6 @@ Route::group(['prefix' => 'aggregator', 'middleware' => ['auth','role:Aggregator
     Route::prefix('hvcdp')->name('aggregator.count.')->group(function() {
         Route::get('/', [AggregatorCountController::class, 'count'])->name('count');
         Route::post('/', [AggregatorCountController::class, 'store'])->name('store');
-        Route::post('/count', [AggregatorCountController::class, 'store'])->name('store');
 
         Route::get('/{id}/edit', [AggregatorCountController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AggregatorCountController::class, 'update'])->name('update');

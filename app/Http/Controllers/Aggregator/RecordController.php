@@ -17,47 +17,46 @@ class RecordController extends Controller
 {
     public function index(Request $request)
 {
-    // Validate the input dates
+    // Validate input dates and filters
     $request->validate([
         'from_date' => 'nullable|date',
         'to_date' => 'nullable|date|after_or_equal:from_date',
         'barangay' => 'nullable|string',
-        'inputted_data' => 'nullable|array', // For filtering by data presence
+        'inputted_data' => 'nullable|array',
     ]);
 
-    // Get the current user's role ID
-    $currentUserRoleId = auth()->user()->role_id;
+    // Get the current user's ID
+    $currentUserId = auth()->id();
 
-    // Query the farmers, including their inventory
+    // Query the farmers, including their inventory and plants
     $farmers = Farmer::with('inventoryValuedCrops.plant')->newQuery();
 
     // Filter by date if provided
-    if ($request->has('from_date') && $request->has('to_date')) {
-        $fromDate = $request->from_date . ' 00:00:00'; // start of the day
-        $toDate = $request->to_date . ' 23:59:59'; // end of the day
-
+    if ($request->filled(['from_date', 'to_date'])) {
+        $fromDate = $request->from_date . ' 00:00:00';
+        $toDate = $request->to_date . ' 23:59:59';
         $farmers->whereBetween('created_at', [$fromDate, $toDate]);
     }
 
     // Filter by barangay if provided
-    if ($request->has('barangay')) {
+    if ($request->filled('barangay')) {
         $farmers->whereHas('affiliation', function($query) use ($request) {
             $query->where('name_of_barangay', $request->barangay);
         });
     }
 
-    // Filter for farmers with or without data
-    if ($request->has('inputted_data')) {
+    // Filter for farmers with or without data if specified
+    if ($request->filled('inputted_data')) {
         if (in_array('yes', $request->input('inputted_data'))) {
             $farmers->whereHas('inventoryValuedCrops');
         }
         if (in_array('no', $request->input('inputted_data'))) {
-            $farmers->doesntHave('inventoryValuedCrops');
+            $farmers->whereDoesntHave('inventoryValuedCrops');
         }
     }
 
     // Filter to show only farmers added by the current user
-    $farmers->where('added_by', $currentUserRoleId);
+    $farmers->where('added_by', $currentUserId);
 
     // Get the filtered farmers
     $farmers = $farmers->get();
@@ -65,7 +64,7 @@ class RecordController extends Controller
     // Get all affiliations
     $affiliations = Affiliation::all();
 
-    // Get unique plants
+    // Get unique plants from the filtered farmers
     $uniquePlants = $farmers->flatMap(function($farmer) {
         return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
     })->unique();
@@ -74,6 +73,7 @@ class RecordController extends Controller
         'title' => 'HVCDP - Records'
     ]);
 }
+
 
 
 

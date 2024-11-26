@@ -31,4 +31,9 @@ class Affiliation extends Model
 
         return view('hvcdp.print', compact('farmers', 'uniquePlants'));
     }
+    public function monthlyRecords() 
+    {
+    return $this->hasMany(MonthlyRecord::class);
+    }
+
 }

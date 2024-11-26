@@ -11,8 +11,6 @@
             <!-- <div>
                 <a href="{{ route('aggregator.hvcdp.print', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'barangay' => request('barangay')]) }}" class="btn btn-primary" target="_blank"><i class="fa fa-print" aria-hidden="true"></i><br>Print</a>
                 <button class="btn btn-secondary">CSV</button>
-                <a href="{{ route('aggregator.hvcdp.exportExcel', ['barangay' => request('barangay'), 'from_date' => request('from_date'), 'to_date' => request('to_date')]) }}" class="btn btn-success" target="_blank"><i class="fa fa-table" aria-hidden="true"></i><br>Export Excel</a>
-
             </div> -->
         </div>
 
@@ -62,8 +60,45 @@
     <h6 class="m-0 text-success"><span class="font-weight-bold">Recorded Inventory</span></h6>
 </div>
     <div class="card-body">
+        <!-- Search Bar -->
+        <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by First Name or Last Name" style="max-width: 300px;" onkeyup="filterFarmersTable()">
+        <!-- JavaScript for Filtering Table -->
+        <script>
+            function filterFarmersTable() {
+                // Get input from the search bar
+                const query = document.getElementById("searchBar").value.toLowerCase();
+                const table = document.getElementById("farmersTable");
+                const rows = table.getElementsByTagName("tr");
+
+                // Loop through all table rows (except the header)
+                for (let i = 1; i < rows.length; i++) {
+                    const surnameCell = rows[i].getElementsByTagName("td")[1];
+                    const firstnameCell = rows[i].getElementsByTagName("td")[2];
+                    const affiliationCell = rows[i].getElementsByTagName("td")[3];
+
+                    if (surnameCell && firstnameCell && affiliationCell) {
+                        const surname = surnameCell.textContent.toLowerCase();
+                        const firstname = firstnameCell.textContent.toLowerCase();
+                        const affiliation = affiliationCell.textContent.toLowerCase();
+
+                        // Check if the query matches any of the fields
+                        if (
+                            surname.includes(query) || 
+                            firstname.includes(query) || 
+                            affiliation.includes(query)
+                        ) {
+                            rows[i].style.display = ""; // Show row
+                        } else {
+                            rows[i].style.display = "none"; // Hide row
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <br>
         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="farmersTable">
             <thead>
                 <tr>
                     <th>No.</th>

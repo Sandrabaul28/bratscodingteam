@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Controller; 
 use App\Models\User;
 use App\Models\Farmer;
 use App\Models\Affiliation; // Import the Affiliation model
@@ -11,71 +11,107 @@ use Illuminate\Support\Facades\Hash;
 use App\Imports\FarmersImport;
 use Maatwebsite\Excel\Facades\Excel;
 
-class FarmersController extends Controller
+class FarmersController extends Controller 
 {
-    // FarmerController.php
+
     public function index(Request $request)
-    {
-        $perPage = $request->get('per_page', 10); // Default to 10 if not specified
-        $search = $request->get('search');
-        $affiliationId = $request->get('affiliation_id');
-        
-        $farmers = Farmer::when($search, function($query) use ($search) {
-                return $query->where('first_name', 'like', '%' . $search . '%')
-                             ->orWhere('last_name', 'like', '%' . $search . '%');
-            })
-            ->when($affiliationId, function($query) use ($affiliationId) {
-                return $query->where('affiliation_id', $affiliationId);
-            })
-            ->paginate($perPage);
-            
-        $affiliations = Affiliation::all();
+{
+    
+    // Fetch all affiliations for the dropdowns
+    $affiliations = Affiliation::all();
 
-        return view('admin.farmers.create', compact('farmers', 'affiliations'), [
-            'title' => 'Farmers Lists'
-        ]);
-    }
+    // Fetch unique barangays and associations for filter options
+    $uniqueBarangays = Affiliation::distinct()->pluck('name_of_barangay');
+    // Fetch unique associations from the Affiliation table and exclude null or empty values
+    $uniqueAssociations = Affiliation::distinct()
+        ->whereNotNull('name_of_association')
+        ->where('name_of_association', '!=', '')
+        ->pluck('name_of_association');
 
 
+    // Pass filtered farmers, affiliations, and unique filters to the view
+    return view('admin.farmers.create', compact('farmers', 'affiliations', 'uniqueBarangays', 'uniqueAssociations'), [
+        'title' => 'Farmers List'
+    ]);
+}
 
+
+ 
     public function create()
-    {
-        // Fetch all affiliations 
-        $affiliations = Affiliation::all();
-        
-        // Fetch all farmers for the create view
-        $farmers = Farmer::with('affiliation')->get();
+{
+    // Fetch all affiliations 
+    $affiliations = Affiliation::all();
 
-        // Pass affiliations and farmers to the create view
-        return view('admin.farmers.create', compact('affiliations', 'farmers'), [
-            'title' => 'Add Farmer'
-        ]);
-    }
+    // Fetch unique barangays and associations from the Affiliation table
+    $uniqueBarangays = Affiliation::distinct()->pluck('name_of_barangay');  // Array of strings
+    $uniqueAssociations = Affiliation::distinct()->pluck('name_of_association');  // Array of strings
+
+    $farmers = Farmer::get();
+
+
+    
+    // Pass affiliations, uniqueBarangays, and uniqueAssociations to the create view
+    return view('admin.farmers.create', compact('affiliations', 'uniqueBarangays', 'uniqueAssociations', 'farmers'), [
+        'title' => 'Add Farmer'
+    ]);
+}
+
 
 
     public function store(Request $request)
 {
+    // Validate the request
     $request->validate([
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'middle_name' => 'nullable|string|max:255',
         'extension' => 'nullable|string|max:255',
-        'affiliation_id' => 'nullable|exists:affiliations,id',
-        'control_number' => 'required|string|size:19|unique:farmers,control_number|max:20', // Unique control number validation
+        'name_of_barangay' => 'nullable|string|max:255',
+        'name_of_association' => 'nullable|string|max:255',
         'birthdate' => 'nullable|date',
         'email' => 'nullable|email',
         'password' => 'nullable|min:6|confirmed',
     ]);
 
-    // Create farmer
+    // Check if barangay is provided
+    if ($request->name_of_barangay) {
+        // If association is provided, create or retrieve affiliation with both barangay and association
+        if ($request->name_of_association) {
+            $affiliation = Affiliation::firstOrCreate([
+                'name_of_barangay' => $request->name_of_barangay,
+                'name_of_association' => $request->name_of_association,
+            ]);
+        } else {
+            // If no association is provided, check if there is already an affiliation with just the barangay
+            $affiliation = Affiliation::firstOrCreate([
+                'name_of_barangay' => $request->name_of_barangay,
+            ]);
+
+            // Ensure there is no affiliation with the same barangay that has an association
+            // If an affiliation already exists with the same barangay but with an association, we won't create it again
+            if ($affiliation->name_of_association) {
+                // In case of association, we just use the existing record
+                return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay with association already exists.']);
+            }
+        }
+    } else {
+        // If no barangay is provided, return error or handle as needed
+        return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay is required']);
+    }
+
+    // Generate the control number
+    $controlNumber = $this->generateControlNumber();
+
+    // Create farmer and link to the affiliation
     $farmer = Farmer::create([
         'first_name' => $request->first_name,
         'last_name' => $request->last_name,
         'middle_name' => $request->middle_name,
         'extension' => $request->extension,
-        'affiliation_id' => $request->affiliation_id,
-        'control_number' => $request->control_number, // Save control number
-        'birthdate' => $request->birthdate, // Save birthdate
+        'barangay' => $request->name_of_barangay, // Store barangay in the farmers table
+        'affiliation_id' => $affiliation->id, // Link to the affiliation
+        'control_number' => $controlNumber,
+        'birthdate' => $request->birthdate,
         'added_by' => auth()->user()->id,
     ]);
 
@@ -85,9 +121,9 @@ class FarmersController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'role_id' => 2, // Adjust role as needed
-            'first_name' => $request->first_name, // Optional, if needed
-            'last_name' => $request->last_name,   // Optional, if needed
-            'affiliation_id' => $request->affiliation_id, // Optional, if needed
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'affiliation_id' => $affiliation->id,
         ]);
 
         // Link user to farmer
@@ -95,8 +131,35 @@ class FarmersController extends Controller
         $farmer->save();
     }
 
+    // Redirect back with success message
     return redirect()->back()->with('success', 'Farmer added successfully!');
 }
+
+
+
+
+
+
+private function generateControlNumber()
+{
+    // Get the last farmer record based on control_number (if any)
+    $lastFarmer = Farmer::orderBy('id', 'desc')->first();
+    
+    // Default to '000001' if there are no records
+    $serialNumber = $lastFarmer ? (substr($lastFarmer->control_number, -6) + 1) : 1;
+    $serialNumber = str_pad($serialNumber, 6, '0', STR_PAD_LEFT); // Ensure it's 6 digits
+    
+    // The fixed parts of the control number
+    $yearCode = '08';     // Example: Fixed year part
+    $barangayCode = '64'; // Example: Fixed barangay code
+    $associationCode = '02'; // Example: Fixed association code
+    $districtCode = '037';  // Example: Fixed district code
+    
+    // Construct and return the full control number
+    return "$yearCode-$barangayCode-$associationCode-$districtCode-$serialNumber";
+}
+
+
 
 
 
@@ -108,76 +171,70 @@ class FarmersController extends Controller
 
 
     public function update(Request $request, $id)
-    {
-        // Retrieve the farmer instance
-        $farmer = Farmer::with('user')->findOrFail($id); // Load user relationship
+{
+    $farmer = Farmer::with('user')->findOrFail($id);
 
-        // Validate the request
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'extension' => 'nullable|string|max:255',
-            'affiliation_id' => 'nullable|exists:affiliations,id',
-            'email' => 'nullable|email|unique:users,email,' . ($farmer->user->id ?? 'null'), // Validate email if provided
-            'password' => 'nullable|min:6|confirmed', // Optional password update
-        ]);
+    $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'middle_name' => 'nullable|string|max:255',
+        'extension' => 'nullable|string|max:255',
+        'control_number' => 'required|string|max:255|unique:farmers,control_number,' . $id,
+        'birthdate' => 'nullable|date',
+        'affiliation_id' => 'nullable|exists:affiliations,id',
+        'email' => 'nullable|email|unique:users,email,' . ($farmer->user->id ?? 'null'),
+        'password' => 'nullable|min:6|confirmed',
+    ]);
 
-        // Update the farmer's details
-        $farmer->first_name = $request->first_name;
-        $farmer->last_name = $request->last_name;
-        $farmer->middle_name = $request->middle_name;
-        $farmer->extension = $request->extension;
-        $farmer->affiliation_id = $request->affiliation_id;
-        $farmer->save();
+    // Update Farmer Details
+    $farmer->update($request->only(['first_name', 'last_name', 'middle_name', 'extension', 'control_number', 'birthdate', 'affiliation_id']));
 
-         // Check if the farmer has an associated user account
+    // Handle Account Creation/Update
+    if ($request->filled('add_account')) {
         if ($farmer->user) {
-            // Update the farmer's details
-            $farmer->first_name = $request->first_name;
-            $farmer->last_name = $request->last_name;
-            $farmer->middle_name = $request->middle_name;
-            $farmer->extension = $request->extension;
-            $farmer->affiliation_id = $request->affiliation_id;
-            $farmer->save();
-
-            // Update the associated user's details
+            // Update Existing User Account
             $user = $farmer->user;
+            $user->update([
+                'email' => $request->email,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_name' => $request->middle_name,
+                'extension' => $request->extension,
+                'affiliation_id' => $request->affiliation_id,
+            ]);
 
-            // Only update the email if provided
-            if ($request->filled('email')) {
-                $user->email = $request->email;
-            }
-
-            // Update password if provided
             if ($request->filled('password')) {
                 $user->password = bcrypt($request->password);
+                $user->save();
             }
-
-            // Save user changes
-            $user->save();
-
-            return redirect()->back()->with('success', 'Farmer and user updated successfully.');
         } else {
-            // If no user account exists, create a new user
-            if ($request->filled('email')) {
-                $user->first_name = $request->first_name; // Optional
-                $user->last_name = $request->last_name; // Optional
-                $user->middle_name = $request->middle_name; // Optional
-                $user->extension = $request->extension; // Optional
-                $user->email = $request->email;
-                $user->password = bcrypt($request->password); // Ensure the password is hashed
-                $user->role_id = 2; // Set the appropriate role for farmers
-                $user->save(); // Save the new user
+            // Create New User Account
+            $user = User::create([
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role_id' => 2, // Farmer Role
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_name' => $request->middle_name,
+                'extension' => $request->extension,
+                'affiliation_id' => $request->affiliation_id,
+            ]);
 
-                // Associate the user with the farmer
-                $farmer->user()->associate($user);
-                $farmer->save();
-            }
-
-            return redirect()->back()->with('success', 'Farmer details updated, and new user account created successfully.');
+            // Associate User with Farmer
+            $farmer->user()->associate($user);
+            $farmer->save();
+        }
+    } else {
+        // Remove Account if Account Fields Are Empty
+        if ($farmer->user) {
+            $farmer->user()->delete();
         }
     }
+
+    return redirect()->back()->with('success', 'Farmer and account updated successfully.');
+}
+
+
 
 
     public function destroy($id)
@@ -193,7 +250,7 @@ class FarmersController extends Controller
         // Delete the farmer record
         $farmer->delete();
 
-        return redirect()->back()->with('success', 'Farmer added successfully!');
+        return redirect()->back()->with('success', 'Farmer deleted successfully!');
     }
 
 
@@ -209,4 +266,5 @@ class FarmersController extends Controller
         return redirect()->back()->with('success', 'Farmers imported successfully!');
     }
 
+    
 }

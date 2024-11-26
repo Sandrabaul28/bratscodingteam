@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,7 +9,9 @@ use App\Models\User;
 use App\Models\InventoryValuedCrop;
 use App\Exports\HVCDPExport;
 use Illuminate\Support\Facades\DB;
-
+use thiagoalessio\TesseractOCR\TesseractOCR;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
@@ -71,27 +72,103 @@ class HVCDPController extends Controller
     ]);
 }
 
+    
 
-    public function store(Request $request)
-    {
-        // Validate the form input
-        $request->validate([
-            'farmer_id' => 'required|exists:farmers,id',
-            'plant_id' => 'required|exists:plants,id',
-            'count' => 'required|integer|min:1',
-        ]);
+public function store(Request $request)
+{
+    // Get the authenticated user
+    $user = Auth::user();
 
-        // Store the new inventory record
-        InventoryValuedCrop::create([
-            'farmer_id' => $request->farmer_id,
-            'plant_id' => $request->plant_id,
-            'count' => $request->count,
-            'added_by' => auth()->user()->id, 
-        ]);
-
-        // Redirect back with success message
-        return redirect()->route('admin.hvcdp.index')->with('success', 'Record added successfully!');
+    if (!$user) {
+        return redirect()->back()->withErrors(['user' => 'User not authenticated.']);
     }
+
+    // Validate the input
+    $request->validate([
+        'farmer_id' => 'required|exists:farmers,id',
+        'plant_id' => 'required|exists:plants,id',
+        'count' => 'required|integer|min:1',
+        'image' => 'nullable|image|max:10240',  // Make image optional
+    ]);
+
+    // Initialize variables for latitude and longitude
+    $latitude = $longitude = null;
+    $imagePath = null;
+
+    // Handle the uploaded image
+    if ($request->hasFile('image')) {
+        // Store the image in the public storage
+        $imagePath = $request->file('image')->store('images', 'public');
+        $imageFullPath = storage_path('app/public/' . $imagePath);
+
+        try {
+            // Run OCR using Tesseract
+            $ocrText = (new TesseractOCR($imageFullPath))
+                ->executable('C:\Program Files\Tesseract-OCR\tesseract.exe')
+                ->lang('eng')
+                ->run();
+
+            // Log the OCR output for debugging
+            \Log::info('OCR Output: ' . $ocrText);
+
+            if (empty($ocrText)) {
+                throw new \Exception('No text detected in the image.');
+            }
+
+            // Extract coordinates from OCR text
+            $coordinates = $this->extractCoordinatesFromText($ocrText);
+
+            if ($coordinates) {
+                $latitude = $coordinates['latitude'];
+                $longitude = $coordinates['longitude'];
+            } else {
+                throw new \Exception('Coordinates not found in the image text.');
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
+        }
+    }
+
+    // Create the new inventory record
+    InventoryValuedCrop::create([
+        'farmer_id' => $request->input('farmer_id'),
+        'plant_id' => $request->input('plant_id'),
+        'count' => $request->input('count'),
+        'latitude' => $latitude,  // Store latitude
+        'longitude' => $longitude,  // Store longitude
+        'added_by' => $user->id,
+        'image_path' => $imagePath,  // Save the image path or null if no image
+    ]);
+
+    return redirect()->route('admin.hvcdp.index')->with('success', 'Crop added successfully.');
+}
+
+/**
+ * Extract coordinates (latitude and longitude) from the OCR text.
+ *
+ * @param string $ocrText
+ * @return array|null
+ */
+private function extractCoordinatesFromText($ocrText)
+{
+    // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
+    preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
+
+    if (count($matches) > 2) {
+        return [
+            'latitude' => $matches[1],
+            'longitude' => $matches[2],
+        ];
+    }
+
+    return null;  // Return null if no coordinates found
+}
+
+
+
+
+
+
 
 
     public function update(Request $request, $id)

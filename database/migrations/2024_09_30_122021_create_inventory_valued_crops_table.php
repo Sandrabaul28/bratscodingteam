@@ -13,16 +13,19 @@ return new class extends Migration
     {
         Schema::create('inventory_valued_crops', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('farmer_id'); // foreign key sa farmers table
-            $table->unsignedBigInteger('plant_id');  // foreign key sa plants table
+            $table->unsignedBigInteger('farmer_id'); // Foreign key to farmers table
+            $table->unsignedBigInteger('plant_id');  // Foreign key to plants table
             $table->integer('count');
-            $table->decimal('latitude', 10, 8)->nullable(); // Add latitude field
-            $table->decimal('longitude', 11, 8)->nullable(); // Add longitude field
+            $table->decimal('latitude', 10, 8)->nullable(); // Latitude field
+            $table->decimal('longitude', 11, 8)->nullable(); // Longitude field
+            $table->string('image_path')->nullable(); // Allow NULL values for image_path
             $table->timestamps();
 
+            // Foreign keys with cascade delete
             $table->foreign('farmer_id')->references('id')->on('farmers')->onDelete('cascade');
             $table->foreign('plant_id')->references('id')->on('plants')->onDelete('cascade');
         });
+
 
     }
 

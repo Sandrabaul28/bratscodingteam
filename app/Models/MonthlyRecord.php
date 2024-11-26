@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
- 
-class MonthlyInventory extends Model
+
+class MonthlyRecord extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'monthly_inventory_id',
         'farmer_id',
         'plant_id',
         'affiliation_id',
@@ -19,29 +20,21 @@ class MonthlyInventory extends Model
         'vegetative',
         'reproductive',
         'maturity_harvested',
-        // divided
-        'newly_planted_divided',   // Newly Planted divided by Planting Density
-        'vegetative_divided',      // Vegetative divided by Planting Density
-        'reproductive_divided',    // Reproductive divided by Planting Density
-        'maturity_harvested_divided', // Maturity/Harvested divided by Planting Density
+        'newly_planted_divided',
+        'vegetative_divided',
+        'reproductive_divided',
+        'maturity_harvested_divided',
         'total_planted_area',
         'total',
         'area_harvested',
         'final_production_volume',
     ];
 
-    public function saveToHistory()
+    public function monthlyInventory()
     {
-        $data = $this->toArray();
-        $data['monthly_inventory_id'] = $this->id;
-        MonthlyRecord::create($data);
+        return $this->belongsTo(MonthlyInventory::class);
     }
-
-    public function monthlyRecords()
-    {
-        return $this->hasMany(MonthlyRecord::class);
-    }
-
+    // MonthlyRecord Model
 
     public function farmer()
     {
@@ -57,13 +50,14 @@ class MonthlyInventory extends Model
     {
         return $this->belongsTo(Affiliation::class);
     }
-    // In your Inventory model
-    // In your MonthlyInventory model
-    public function inventoryValuedCrop()
+    // Scope to filter records based on month and year
+    public function scopeFilterByMonthAndYear($query, $month, $year)
     {
-        return $this->hasOne(InventoryValuedCrop::class, 'farmer_id', 'farmer_id'); // Adjust this as per your actual relationship
+        return $query->whereHas('monthlyInventory', function ($query) use ($month, $year) {
+            $query->whereMonth('created_at', $month)
+                  ->whereYear('created_at', $year);
+        });
     }
-
     public function getLatitude()
     {
         return $this->inventoryValuedCrop ? $this->inventoryValuedCrop->latitude : null;
@@ -73,8 +67,5 @@ class MonthlyInventory extends Model
     {
         return $this->inventoryValuedCrop ? $this->inventoryValuedCrop->longitude : null;
     }
-
     
-
-
 }

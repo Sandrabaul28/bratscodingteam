@@ -16,10 +16,7 @@
                 </a>
                 
                 <!-- Export to Excel Button -->
-                <a href="{{ route('admin.inventory.exportMonthlyInventoryExcel', ['from_date' => request('from_date'), 'to_date' => request('to_date'), 'barangay' => request('barangay'), 'inputted_data' => request('inputted_data')]) }}" 
-                   class="btn btn-success" target="_blank">
-                   <i class="fa fa-th" aria-hidden="true"></i><br>Excel
-                </a>
+                
             </div>
         </div>
 
@@ -69,8 +66,45 @@
         <h6 class="m-0 text-success">DATA LISTS</h6>
     </div>
     <div class="card-body">
+         <!-- Search Bar -->
+        <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by First Name or Last Name" style="max-width: 300px;" onkeyup="filterFarmersTable()">
+        <!-- JavaScript for Filtering Table -->
+        <script>
+            function filterFarmersTable() {
+                // Get input from the search bar
+                const query = document.getElementById("searchBar").value.toLowerCase();
+                const table = document.getElementById("farmersTable");
+                const rows = table.getElementsByTagName("tr");
+
+                // Loop through all table rows (except the header)
+                for (let i = 1; i < rows.length; i++) {
+                    const surnameCell = rows[i].getElementsByTagName("td")[1];
+                    const firstnameCell = rows[i].getElementsByTagName("td")[2];
+                    const affiliationCell = rows[i].getElementsByTagName("td")[3];
+
+                    if (surnameCell && firstnameCell && affiliationCell) {
+                        const surname = surnameCell.textContent.toLowerCase();
+                        const firstname = firstnameCell.textContent.toLowerCase();
+                        const affiliation = affiliationCell.textContent.toLowerCase();
+
+                        // Check if the query matches any of the fields
+                        if (
+                            surname.includes(query) || 
+                            firstname.includes(query) || 
+                            affiliation.includes(query)
+                        ) {
+                            rows[i].style.display = ""; // Show row
+                        } else {
+                            rows[i].style.display = "none"; // Hide row
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <br>
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="table table-bordered"  id="farmersTable">
             <thead>
                 <tr>
                     <th>No.</th>
@@ -109,6 +143,7 @@
                             <div class="modal-body">
                                 <p><strong>Surname : </strong>{{ $farmer->last_name }}</p>
                                 <p><strong>Firstname : </strong>{{ $farmer->first_name }}</p>
+                                <p><strong>Affiliation : </strong>{{ $farmer->affiliation->name_of_barangay }} {{ $farmer->affiliation->name_of_association }}</p>
                                 <p><strong>Plants :</strong></p>
                                 <ul>
                                     @foreach($farmer->inventoryValuedCrops as $inventoryValuedCrop)

@@ -16,53 +16,54 @@
         <form action="{{ route('admin.affiliations.store') }}" method="POST">
             @csrf
             <div class="form-row mb-3">
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="name_of_barangay">Name of Barangay <span style="color: red;">*</span></label>
                     <input list="barangays" name="name_of_barangay" placeholder="Barangay" class="form-control form-control-sm" required>
                     <datalist id="barangays">
-                        <option value="Benit"></option>
+                        <option value="Beniton"></option>
                         <option value="Buenavista"></option>
-                        <option value="Cabugason"></option>
-                        <option value="Calogcog"></option>
-                        <option value="Cancamares"></option>
+                        <option value="Anahao"></option>
+                        <option value="Taytagan"></option>
                         <option value="Dao"></option>
                         <option value="Divisoria"></option>
                         <option value="Esperanza"></option>
                         <option value="Hilaan"></option>
                         <option value="Himakilo"></option>
                         <option value="Malbago"></option>
-                        <option value="Mandamo"></option>
-                        <option value="Manháa"></option>
-                        <option value="Masaymon"></option>
-                        <option value="Pamahawan"></option>
-                        <option value="Pasil"></option>
+                        <option value="Mauylab"></option>
+                        <option value="Paku"></option>
+                        <option value="Catoogan"></option>
+                        <option value="Lawgawan"></option>
+                        <option value="Lanao"></option>
                         <option value="Poblacion"></option>
-                        <option value="San Juan"></option>
+                        <option value="Santa Cruz"></option>
                         <option value="San Ramon"></option>
                         <option value="Santo Niño"></option>
-                        <option value="Santo Rosario"></option>
+                        <option value="Sampongon"></option>
                         <option value="Talisay"></option>
-                        <option value="Tampoong"></option>
+                        <option value="Hitawos"></option>
                         <option value="Tuburan"></option>
                         <option value="Union"></option>
-                        <option value="Malitbogay"></option>
-                        <option value="Tagbayaon"></option>
+                        <option value="Taa"></option>
+                        <option value="Cawayanan"></option>
                         <option value="Mahayahay"></option>
                         <option value="San Vicente"></option>
-                        <option value="Cagnonocot"></option>
-                        <option value="Sampao"></option>
-                        <option value="Bagong Silang"></option>
-                        <option value="Sillonay"></option>
-                        <option value="Matin-ao"></option>
-                        <option value="San Pedro"></option>
-                        <option value="Pis-ong"></option>
-                        <option value="Si-it"></option>
-                        <option value="Pio Poblador"></option>
-                        <option value="Lawigan"></option>
-                        <option value="Matlang"></option>
+                        <option value="Olisihan"></option>
+                        <option value="Bunga"></option>
+                        <option value="Pamahawan"></option>
+                        <option value="Pangi"></option>
+                        <option value="Hibagwan"></option>
+                        <option value="Pamigsian"></option>
+                        <option value="Casao"></option>
+                        <option value="Catmon"></option>
+                        <option value="Guinsangaan"></option>
+                        <option value="Pong-on"></option>
+                        <option value="Banahao"></option>
+                        <option value="Baugo"></option>
+                       
                     </datalist>
                 </div>
-                <div class="col">
+                <div class="col-12 col-md-6">
                     <label for="name_of_association">Name of Association <span style="color: red;">*</span></label>
                     <input type="text" name="name_of_association" placeholder="Association" class="form-control form-control-sm" >
                 </div>
@@ -85,16 +86,18 @@
             <table class="table table-bordered mb-4">
                 <thead>
                     <tr>
-                        <th>Name of Association</th>
                         <th>Name of Barangay</th>
+                        <th>Name of Association</th>
+                        
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($affiliations as $affiliation)
                         <tr>
-                            <td>{{ $affiliation->name_of_association ?? 'NO ASSOCIATION' }}</td>
                             <td>{{ $affiliation->name_of_barangay }}</td>
+                            
+                            <td>{{ $affiliation->name_of_association ?? 'NO ASSOCIATION' }}</td>
                             <td>
                                 <!-- Edit and Delete buttons -->
                                 <button class="btn btn-warning btn-sm" 

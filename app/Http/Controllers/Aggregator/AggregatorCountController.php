@@ -78,16 +78,17 @@ class AggregatorCountController extends Controller
         'farmer_id' => 'required|exists:farmers,id',
         'plant_id' => 'required|exists:plants,id',
         'count' => 'required|integer|min:1',
-        'image' => 'nullable|image|max:10240',  // Make image optional
+        'image' => 'nullable|image|max:10240',
+        'latitude' => 'nullable|numeric',
+        'longitude' => 'nullable|numeric',
     ]);
 
-    // Initialize variables for latitude and longitude
-    $latitude = $longitude = null;
+    $latitude = $request->input('latitude');
+    $longitude = $request->input('longitude');
     $imagePath = null;
 
     // Handle the uploaded image
     if ($request->hasFile('image')) {
-        // Store the image in the public storage
         $imagePath = $request->file('image')->store('images', 'public');
         $imageFullPath = storage_path('app/public/' . $imagePath);
 
@@ -98,21 +99,15 @@ class AggregatorCountController extends Controller
                 ->lang('eng')
                 ->run();
 
-            // Log the OCR output for debugging
-            \Log::info('OCR Output: ' . $ocrText);
-
-            if (empty($ocrText)) {
-                throw new \Exception('No text detected in the image.');
-            }
-
-            // Extract coordinates from OCR text
-            $coordinates = $this->extractCoordinatesFromText($ocrText);
-
-            if ($coordinates) {
-                $latitude = $coordinates['latitude'];
-                $longitude = $coordinates['longitude'];
-            } else {
-                throw new \Exception('Coordinates not found in the image text.');
+            // Extract coordinates from OCR text if latitude/longitude not provided
+            if (empty($latitude) && empty($longitude)) {
+                $coordinates = $this->extractCoordinatesFromText($ocrText);
+                if ($coordinates) {
+                    $latitude = $coordinates['latitude'];
+                    $longitude = $coordinates['longitude'];
+                } else {
+                    throw new \Exception('Coordinates not found in the image text.');
+                }
             }
         } catch (\Exception $e) {
             return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
@@ -124,10 +119,10 @@ class AggregatorCountController extends Controller
         'farmer_id' => $request->input('farmer_id'),
         'plant_id' => $request->input('plant_id'),
         'count' => $request->input('count'),
-        'latitude' => $latitude,  // Store latitude
-        'longitude' => $longitude,  // Store longitude
+        'latitude' => $latitude,
+        'longitude' => $longitude,
         'added_by' => $user->id,
-        'image_path' => $imagePath,  // Save the image path or null if no image
+        'image_path' => $imagePath,
     ]);
 
     return redirect()->route('aggregator.count.store')->with('success', 'Crop added successfully.');
@@ -135,24 +130,19 @@ class AggregatorCountController extends Controller
 
 /**
  * Extract coordinates (latitude and longitude) from the OCR text.
- *
- * @param string $ocrText
- * @return array|null
  */
 private function extractCoordinatesFromText($ocrText)
 {
-    // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
     preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
-
     if (count($matches) > 2) {
         return [
             'latitude' => $matches[1],
             'longitude' => $matches[2],
         ];
     }
-
-    return null;  // Return null if no coordinates found
+    return null;
 }
+
 
 
 

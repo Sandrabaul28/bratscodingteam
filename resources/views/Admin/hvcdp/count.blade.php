@@ -4,7 +4,7 @@
 <div class="container">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 text-success"><span class="font-weight-bold">HIGH VALUED CROPS DEVELOPMENT PROGRAM</span></h6>
+            <h6 class="m-0 text-success"><span class="font-weight-bold">HIGH VALUED CROPS</span></h6>
         </div>
 
         @if ($errors->any())
@@ -24,50 +24,67 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.hvcdp.store') }}" method="POST" enctype="multipart/form-data"  id="crop-form">
-            @csrf
-            <div class="form-row">
-                <!-- Farmer input -->
-                <div class="form-group col-md-4">
-                    <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
-                    <input list="farmers" id="farmer_name" name="farmer_name" class="form-control" value="{{ old('farmer_name') }}" placeholder="Enter Farmer's name" required>
-                    <datalist id="farmers">
-                        @foreach($farmers as $farmer)
-                            <option value="{{ $farmer->first_name }} {{ $farmer->last_name }}" data-id="{{ $farmer->id }}"></option>
-                        @endforeach
-                    </datalist>
-                    <input type="hidden" name="farmer_id" id="farmer_id" value="{{ old('farmer_id') }}">
-                </div>
+            <form action="{{ route('admin.hvcdp.store') }}" method="POST" enctype="multipart/form-data" id="crop-form">
+    @csrf
+    <div class="form-row">
+        <!-- Farmer input -->
+        <div class="form-group col-md-4">
+            <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
+            <input list="farmers" id="farmer_name" name="farmer_name" class="form-control" value="{{ old('farmer_name') }}" placeholder="Enter Farmer's name" required>
+            <datalist id="farmers">
+                @foreach($farmers as $farmer)
+                    <option value="{{ $farmer->first_name }} {{ $farmer->last_name }}" data-id="{{ $farmer->id }}"></option>
+                @endforeach
+            </datalist>
+            <input type="hidden" name="farmer_id" id="farmer_id" value="{{ old('farmer_id') }}">
+        </div>
 
-                <!-- Plant input -->
-                <div class="form-group col-md-4">
-                    <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
-                    <input list="plants" id="plant_name" name="plant_name" class="form-control" value="{{ old('plant_name') }}" placeholder="Enter Plant/Crop name" required>
-                    <datalist id="plants">
-                        @foreach($plants as $plant)
-                            <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
-                        @endforeach
-                    </datalist>
-                    <input type="hidden" name="plant_id" id="plant_id" value="{{ old('plant_id') }}">
-                </div>
+        <!-- Plant input -->
+        <div class="form-group col-md-4">
+            <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
+            <input list="plants" id="plant_name" name="plant_name" class="form-control" value="{{ old('plant_name') }}" placeholder="Enter Plant/Crop name" required>
+            <datalist id="plants">
+                @foreach($plants as $plant)
+                    <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
+                @endforeach
+            </datalist>
+            <input type="hidden" name="plant_id" id="plant_id" value="{{ old('plant_id') }}">
+        </div>
 
-                <!-- Count input -->
-                <div class="form-group col-md-4">
-                    <label for="count">Count <span style="color: red;">*</span></label>
-                    <input type="number" name="count" class="form-control" value="{{ old('count') }}" placeholder="Enter Count" required>
-                </div>
-            </div>
+        <!-- Count input -->
+        <div class="form-group col-md-4">
+            <label for="count">Count <span style="color: red;">*</span></label>
+            <input type="number" name="count" class="form-control" value="{{ old('count') }}" placeholder="Enter Count" required>
+        </div>
+    </div>
 
-             <!-- Image upload field -->
-                <div class="form-group col-md-4">
-                    <label for="image">Upload Image <span style="color: red;">*</span></label>
-                    <input type="file" name="image" id="image" class="form-control" accept="image/*" >
-                </div>
+    <div class="form-row">
+        <!-- Latitude input -->
+        <div class="form-group col-md-4">
+            <label for="latitude">Latitude (Optional)</label>
+            <input type="text" name="latitude" id="latitude" class="form-control" value="{{ old('latitude') }}" placeholder="Enter Latitude">
+        </div>
+
+        <!-- Longitude input -->
+        <div class="form-group col-md-4">
+            <label for="longitude">Longitude (Optional)</label>
+            <input type="text" name="longitude" id="longitude" class="form-control" value="{{ old('longitude') }}" placeholder="Enter Longitude">
+        </div>
+
+        
+        <!-- Image upload field -->
+        <div class="form-group col-md-4">
+            <label for="image">Upload Image (Optional)</label>
+            <input type="file" name="image" id="image" class="form-control" accept="image/*">
+        </div>
+    </div>
 
 
-            <!-- Submit and Add Farmer buttons -->
-            <button type="submit" class="btn btn-success">Add</button>
-        </form>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-success">Add</button>
+</form>
+
 
 
             <script>

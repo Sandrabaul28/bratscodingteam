@@ -4,7 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryValuedCrop; 
-use App\Models\Farmer;
+use App\Models\Farmer; 
 use App\Models\Plant; // Assuming you have a Plant model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,79 +41,74 @@ class UserEncodeController extends Controller
 
 
     public function store(Request $request)
-    {
-        // Get the authenticated user
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->back()->withErrors(['user' => 'User not authenticated.']);
-        }
+    if (!$user) {
+        return redirect()->back()->withErrors(['user' => 'User not authenticated.']);
+    }
 
-        // Validate the input
-        $request->validate([
-            'plant_id' => 'required|exists:plants,id',
-            'count' => 'required|integer|min:1',
-            'image' => 'nullable|image|max:10240',  // Make image optional
-        ]);
+    // Validate input
+    $request->validate([
+        'plant_id' => 'required|exists:plants,id',
+        'count' => 'required|integer|min:1',
+        'latitude' => 'nullable|numeric',
+        'longitude' => 'nullable|numeric',
+        'image' => 'nullable|image|max:10240', // Optional image
+    ]);
 
-        // Initialize variables for latitude and longitude
-        $latitude = $longitude = null;
-        $imagePath = null;
+    // Initialize latitude and longitude from form or OCR
+    $latitude = $request->input('latitude');
+    $longitude = $request->input('longitude');
+    $imagePath = null;
 
-        // Handle the uploaded image
-        if ($request->hasFile('image')) {
-            // Store the image in the public storage
-            $imagePath = $request->file('image')->store('images', 'public');
-            $imageFullPath = storage_path('app/public/' . $imagePath);
+    // Process image for OCR if provided
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('images', 'public');
+        $imageFullPath = storage_path('app/public/' . $imagePath);
 
+        if (!$latitude || !$longitude) {
             try {
-                // Run OCR using Tesseract
                 $ocrText = (new TesseractOCR($imageFullPath))
                     ->executable('C:\Program Files\Tesseract-OCR\tesseract.exe')
                     ->lang('eng')
                     ->run();
 
-                // Log the OCR output for debugging
-                \Log::info('OCR Output: ' . $ocrText);
-
-                if (empty($ocrText)) {
-                    throw new \Exception('No text detected in the image.');
-                }
-
-                // Extract coordinates from OCR text
+                // Extract coordinates if not manually provided
                 $coordinates = $this->extractCoordinatesFromText($ocrText);
-
-                if ($coordinates) {
-                    $latitude = $coordinates['latitude'];
-                    $longitude = $coordinates['longitude'];
-                } else {
-                    throw new \Exception('Coordinates not found in the image text.');
-                }
+                $latitude = $latitude ?? $coordinates['latitude'];
+                $longitude = $longitude ?? $coordinates['longitude'];
             } catch (\Exception $e) {
-                return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
+                return back()->withErrors(['ocr_error' => 'OCR failed: ' . $e->getMessage()]);
             }
         }
-
-        // Get the farmer associated with the logged-in user
-        $farmer = $user->farmer; // Assuming a relationship exists between User and Farmer
-
-        if (!$farmer || $farmer->affiliation_id !== $user->affiliation_id) {
-            return redirect()->back()->withErrors(['farmer_id' => 'The selected farmer does not belong to your affiliation.']);
-        }
-
-        // Create the new inventory record
-        InventoryValuedCrop::create([
-            'farmer_id' => $farmer->id,  // Use the farmer ID associated with the logged-in user
-            'plant_id' => $request->input('plant_id'),
-            'count' => $request->input('count'),
-            'latitude' => $latitude,  // Store latitude
-            'longitude' => $longitude,  // Store longitude
-            'added_by' => $user->id,  // Save the ID of the logged-in user
-            'image_path' => $imagePath,  // Save the image path or null if no image
-        ]);
-
-        return redirect()->route('user.count.count')->with('success', 'Crop added successfully.');
     }
+
+    // Validate coordinates
+    if ($latitude && $longitude && (!is_numeric($latitude) || !is_numeric($longitude))) {
+        return redirect()->back()->withErrors(['coordinates' => 'Invalid latitude or longitude values.']);
+    }
+
+    // Ensure farmer belongs to the user's affiliation
+    $farmer = $user->farmer;
+    if (!$farmer || $farmer->affiliation_id !== $user->affiliation_id) {
+        return redirect()->back()->withErrors(['farmer_id' => 'The selected farmer does not belong to your affiliation.']);
+    }
+
+    // Save crop data
+    InventoryValuedCrop::create([
+        'farmer_id' => $farmer->id,
+        'plant_id' => $request->input('plant_id'),
+        'count' => $request->input('count'),
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'added_by' => $user->id,
+        'image_path' => $imagePath,
+    ]);
+
+    return redirect()->route('user.count.store')->with('success', 'Crop added successfully.');
+}
+
 
     /**
      * Extract coordinates (latitude and longitude) from the OCR text.

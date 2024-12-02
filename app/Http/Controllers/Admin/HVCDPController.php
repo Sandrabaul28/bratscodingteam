@@ -88,16 +88,19 @@ public function store(Request $request)
         'farmer_id' => 'required|exists:farmers,id',
         'plant_id' => 'required|exists:plants,id',
         'count' => 'required|integer|min:1',
-        'image' => 'nullable|image|max:10240',  // Make image optional
+        'image' => 'nullable|image|max:10240',  // Optional image
+        'latitude' => 'nullable|regex:/^\-?\d+(\.\d+)?$/',  // Validate latitude format
+        'longitude' => 'nullable|regex:/^\-?\d+(\.\d+)?$/', // Validate longitude format
     ]);
 
-    // Initialize variables for latitude and longitude
-    $latitude = $longitude = null;
+    // Variables for latitude, longitude, and image path
+    $latitude = $request->input('latitude');
+    $longitude = $request->input('longitude');
     $imagePath = null;
 
     // Handle the uploaded image
     if ($request->hasFile('image')) {
-        // Store the image in the public storage
+        // Store the image
         $imagePath = $request->file('image')->store('images', 'public');
         $imageFullPath = storage_path('app/public/' . $imagePath);
 
@@ -108,25 +111,21 @@ public function store(Request $request)
                 ->lang('eng')
                 ->run();
 
-            // Log the OCR output for debugging
-            \Log::info('OCR Output: ' . $ocrText);
-
-            if (empty($ocrText)) {
-                throw new \Exception('No text detected in the image.');
-            }
-
             // Extract coordinates from OCR text
             $coordinates = $this->extractCoordinatesFromText($ocrText);
 
             if ($coordinates) {
                 $latitude = $coordinates['latitude'];
                 $longitude = $coordinates['longitude'];
-            } else {
-                throw new \Exception('Coordinates not found in the image text.');
             }
         } catch (\Exception $e) {
             return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
         }
+    }
+
+    // Check if latitude and longitude are still empty
+    if (is_null($latitude) || is_null($longitude)) {
+        return back()->withErrors(['coordinates' => 'Please provide latitude and longitude or upload an image.']);
     }
 
     // Create the new inventory record
@@ -134,14 +133,15 @@ public function store(Request $request)
         'farmer_id' => $request->input('farmer_id'),
         'plant_id' => $request->input('plant_id'),
         'count' => $request->input('count'),
-        'latitude' => $latitude,  // Store latitude
-        'longitude' => $longitude,  // Store longitude
+        'latitude' => $latitude,
+        'longitude' => $longitude,
         'added_by' => $user->id,
-        'image_path' => $imagePath,  // Save the image path or null if no image
+        'image_path' => $imagePath,
     ]);
 
     return redirect()->route('admin.hvcdp.index')->with('success', 'Crop added successfully.');
 }
+
 
 /**
  * Extract coordinates (latitude and longitude) from the OCR text.
@@ -162,7 +162,7 @@ private function extractCoordinatesFromText($ocrText)
     }
 
     return null;  // Return null if no coordinates found
-}
+} 
 
 
 

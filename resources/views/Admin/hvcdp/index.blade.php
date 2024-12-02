@@ -110,6 +110,7 @@
                     <th>No.</th>
                     <th>Surname</th>
                     <th>Firstname</th>
+                    <th>Barangay</th>
                     <th>Affiliation</th>
                     <th>Has Data</th> <!-- Existing column -->
                     <th>Actions</th>
@@ -122,6 +123,7 @@
                     <td>{{ $farmer->last_name }}</td>
                     <td>{{ $farmer->first_name }}</td>
                     <td>{{ $farmer->affiliation->name_of_barangay }}</td>
+                    <td>{{ $farmer->affiliation->name_of_association }}</td>
                     <td>{{ $farmer->inventoryValuedCrops->isNotEmpty() ? 'Yes' : 'No' }}</td>
                     <td>
                         <button class="btn btn-info" data-toggle="modal" data-target="#viewModal{{ $farmer->id }}"><i class="fas fa-eye"></i></button>

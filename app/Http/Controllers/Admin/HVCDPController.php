@@ -123,46 +123,26 @@ public function store(Request $request)
         }
     }
 
-    // Check if latitude and longitude are still empty
+    // If no latitude or longitude and no image uploaded, set default values or allow empty values
     if (is_null($latitude) || is_null($longitude)) {
-        return back()->withErrors(['coordinates' => 'Please provide latitude and longitude or upload an image.']);
+        $latitude = $latitude ?: null; // Allow null if not provided
+        $longitude = $longitude ?: null; // Allow null if not provided
     }
 
-    // Create the new inventory record
+    // Create the new inventory record, allowing latitude and longitude to be null
     InventoryValuedCrop::create([
         'farmer_id' => $request->input('farmer_id'),
         'plant_id' => $request->input('plant_id'),
         'count' => $request->input('count'),
-        'latitude' => $latitude,
-        'longitude' => $longitude,
+        'latitude' => $latitude,  // Can be null
+        'longitude' => $longitude,  // Can be null
         'added_by' => $user->id,
-        'image_path' => $imagePath,
+        'image_path' => $imagePath,  // Image is optional
     ]);
 
     return redirect()->route('admin.hvcdp.index')->with('success', 'Crop added successfully.');
 }
 
-
-/**
- * Extract coordinates (latitude and longitude) from the OCR text.
- *
- * @param string $ocrText
- * @return array|null
- */
-private function extractCoordinatesFromText($ocrText)
-{
-    // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
-    preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
-
-    if (count($matches) > 2) {
-        return [
-            'latitude' => $matches[1],
-            'longitude' => $matches[2],
-        ];
-    }
-
-    return null;  // Return null if no coordinates found
-} 
 
 
 

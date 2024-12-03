@@ -18,9 +18,11 @@
             <!-- Filter by Date Form -->
             <form action="{{ route('aggregator.hvcdp.index') }}" method="GET" class="form-inline mb-3">
                 <label for="from_date">From: </label>
-                <input type="date" name="from_date" id="from_date" class="form-control mx-2">
+                <input type="date" name="from_date" id="from_date" class="form-control mx-2" 
+                       value="{{ request('from_date') ?? old('from_date') }}">
                 <label for="to_date">To: </label>
-                <input type="date" name="to_date" id="to_date" class="form-control mx-2">
+                <input type="date" name="to_date" id="to_date" class="form-control mx-2" 
+                       value="{{ request('to_date') ?? old('to_date') }}">
                 <button type="submit" class="btn btn-success mx-2">Filter</button>
                 <a href="{{ route('aggregator.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
             </form>
@@ -31,22 +33,28 @@
                 <select name="barangay" id="barangay" class="form-control mx-2">
                     <option value="">-- Select Barangay --</option>
                     @foreach($affiliations as $affiliation)
-                        <option value="{{ $affiliation->name_of_barangay }}">{{ $affiliation->name_of_barangay }} - {{ $affiliation->name_of_association }}</option>
+                        <option value="{{ $affiliation->name_of_barangay }}" 
+                            {{ request('barangay') == $affiliation->name_of_barangay ? 'selected' : '' }}>
+                            {{ $affiliation->name_of_barangay }} - {{ $affiliation->name_of_association }}
+                        </option>
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-success mx-2">Filter</button>
                 <a href="{{ route('aggregator.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
             </form>
             <br>
+
             <!-- Filter by Inputted Data Form -->
             <form action="{{ route('aggregator.hvcdp.index') }}" method="GET" class="form-inline mb-3">
                 <label>Filter Farmers with Data: </label>
                 <div class="form-check form-check-inline mx-2">
-                    <input class="form-check-input" type="checkbox" id="withData" name="inputted_data[]" value="yes">
+                    <input class="form-check-input" type="checkbox" id="withData" name="inputted_data[]" value="yes"
+                           {{ in_array('yes', request('inputted_data', [])) ? 'checked' : '' }}>
                     <label class="form-check-label" for="withData">With Data</label>
                 </div>
                 <div class="form-check form-check-inline mx-2">
-                    <input class="form-check-input" type="checkbox" id="withoutData" name="inputted_data[]" value="no">
+                    <input class="form-check-input" type="checkbox" id="withoutData" name="inputted_data[]" value="no"
+                           {{ in_array('no', request('inputted_data', [])) ? 'checked' : '' }}>
                     <label class="form-check-label" for="withoutData">Without Data</label>
                 </div>
                 <button type="submit" class="btn btn-success mx-2">Filter</button>
@@ -61,7 +69,8 @@
 </div>
     <div class="card-body">
         <!-- Search Bar -->
-        <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by First Name or Last Name" style="max-width: 300px;" onkeyup="filterFarmersTable()">
+        <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by First Name, Last Name, Barangay, or Association" style="max-width: 300px;" onkeyup="filterFarmersTable()">
+
         <!-- JavaScript for Filtering Table -->
         <script>
             function filterFarmersTable() {
@@ -74,18 +83,21 @@
                 for (let i = 1; i < rows.length; i++) {
                     const surnameCell = rows[i].getElementsByTagName("td")[1];
                     const firstnameCell = rows[i].getElementsByTagName("td")[2];
-                    const affiliationCell = rows[i].getElementsByTagName("td")[3];
+                    const barangayCell = rows[i].getElementsByTagName("td")[3];
+                    const associationCell = rows[i].getElementsByTagName("td")[4]; // Assuming association is in column 4
 
-                    if (surnameCell && firstnameCell && affiliationCell) {
+                    if (surnameCell && firstnameCell && barangayCell && associationCell) {
                         const surname = surnameCell.textContent.toLowerCase();
                         const firstname = firstnameCell.textContent.toLowerCase();
-                        const affiliation = affiliationCell.textContent.toLowerCase();
+                        const barangay = barangayCell.textContent.toLowerCase();
+                        const association = associationCell.textContent.toLowerCase();
 
                         // Check if the query matches any of the fields
                         if (
                             surname.includes(query) || 
                             firstname.includes(query) || 
-                            affiliation.includes(query)
+                            barangay.includes(query) || 
+                            association.includes(query)
                         ) {
                             rows[i].style.display = ""; // Show row
                         } else {
@@ -96,6 +108,7 @@
             }
         </script>
 
+
         <br>
         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-bordered" id="farmersTable">
@@ -104,7 +117,8 @@
                     <th>No.</th>
                     <th>Surname</th>
                     <th>Firstname</th>
-                    <th>Affiliation</th>
+                    <th>Barangay</th>
+                    <th>Association</th>
                     <th>Has Data</th> <!-- Existing column -->
                     <th>Actions</th>
                 </tr>
@@ -116,6 +130,7 @@
                     <td>{{ $farmer->last_name }}</td>
                     <td>{{ $farmer->first_name }}</td>
                     <td>{{ $farmer->affiliation->name_of_barangay }}</td>
+                    <td>{{ $farmer->affiliation->name_of_association }}</td>
                     <td>{{ $farmer->inventoryValuedCrops->isNotEmpty() ? 'Yes' : 'No' }}</td>
                     <td>
                         <button class="btn btn-info" data-toggle="modal" data-target="#viewModal{{ $farmer->id }}"><i class="fas fa-eye"></i></button>

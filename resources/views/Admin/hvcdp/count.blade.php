@@ -122,7 +122,7 @@
                             <div class="card-body">
                                 <!-- Search Bar for Filtering -->
                                 <div class="mb-3">
-                                    <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by Name or Affiliation" onkeyup="filterTable()" style="max-width: 300px;">
+                                    <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by Name, Barangay, or Association" onkeyup="filterTable()" style="max-width: 300px;">
                                 </div>
 
                                 <!-- JavaScript for Filtering -->
@@ -143,9 +143,13 @@
                                             for (let j = 0; j < cells.length; j++) {
                                                 if (cells[j]) {
                                                     const cellText = cells[j].textContent || cells[j].innerText;
-                                                    if (cellText.toLowerCase().indexOf(filter) > -1) {
-                                                        matchFound = true;
-                                                        break;
+                                                    
+                                                    // Adjust the logic here to specifically match columns for Name, Barangay, and Association
+                                                    if (j === 0 || j === 1 || j === 2) { // Assuming Name is in the first column, Barangay in the second, and Association in the third
+                                                        if (cellText.toLowerCase().indexOf(filter) > -1) {
+                                                            matchFound = true;
+                                                            break;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -159,12 +163,14 @@
                                     }
                                 </script>
 
+
                                 <div class="table-responsive">
                                     <table class="table table-bordered" id="inventory-table">
                         <thead>
                             <tr>
                                 <th>Name of Farmer</th>
-                                <th>Affiliation</th>
+                                <th>Barangay</th>
+                                <th>Association</th>
                                 <th>Plants (Name and Count)</th>
                             </tr>
                         </thead>
@@ -178,9 +184,8 @@
                                     if (!isset($groupedInventory[$crop->farmer_id])) {
                                         $groupedInventory[$crop->farmer_id] = [
                                             'farmer_name' => $crop->first_name . ' ' . $crop->last_name,
-                                            'affiliation' => $crop->name_of_association 
-                                                            ? $crop->name_of_association . ' - ' . $crop->name_of_barangay 
-                                                            : $crop->name_of_barangay,
+                                            'barangay' => $crop->name_of_barangay, // Show barangay separately
+                                            'association' => $crop->name_of_association, // Show association separately
                                             'added_by_first_name' => $crop->added_by_first_name,
                                             'added_by_last_name' => $crop->added_by_last_name,
                                             'plants' => []
@@ -193,7 +198,8 @@
                             @foreach($groupedInventory as $farmerId => $group)
                                 <tr>
                                     <td>{{ $group['farmer_name'] }}</td>
-                                    <td>{{ $group['affiliation'] }}</td>
+                                    <td>{{ $group['barangay'] }}</td> <!-- Display barangay here -->
+                                    <td>{{ $group['association'] ?? 'N/A' }}</td> <!-- Display association here (or 'N/A' if not available) -->
                                     <td>
                                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ $farmerId }}" aria-expanded="false" aria-controls="collapse-{{ $farmerId }}">
                                             <i class="fa fa-arrow-circle-down" aria-hidden="true"></i> View Plants
@@ -203,7 +209,7 @@
 
                                 <!-- Collapsible rows for plant details -->
                                 <tr id="collapse-{{ $farmerId }}" class="collapse">
-                                    <td colspan="3">
+                                    <td colspan="4"> <!-- Adjusted colspan to 4 -->
                                         <table class="table table-sm table-bordered">
                                             <thead>
                                                 <tr>

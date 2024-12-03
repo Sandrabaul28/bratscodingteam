@@ -71,36 +71,33 @@ class FarmersController extends Controller
         'birthdate' => 'nullable|date',
         'email' => 'nullable|email',
         'password' => 'nullable|min:6|confirmed',
+        'control_number' => [
+            'required',
+            'string',
+            'regex:/^08-64-02-\d{3}-\d{6}$/', // Accepts format: 08-64-02-XXX-YYYYYY
+            'unique:farmers,control_number',  // Ensures uniqueness
+        ],
     ]);
 
     // Check if barangay is provided
     if ($request->name_of_barangay) {
-        // If association is provided, create or retrieve affiliation with both barangay and association
         if ($request->name_of_association) {
             $affiliation = Affiliation::firstOrCreate([
                 'name_of_barangay' => $request->name_of_barangay,
                 'name_of_association' => $request->name_of_association,
             ]);
         } else {
-            // If no association is provided, check if there is already an affiliation with just the barangay
             $affiliation = Affiliation::firstOrCreate([
                 'name_of_barangay' => $request->name_of_barangay,
             ]);
 
-            // Ensure there is no affiliation with the same barangay that has an association
-            // If an affiliation already exists with the same barangay but with an association, we won't create it again
             if ($affiliation->name_of_association) {
-                // In case of association, we just use the existing record
                 return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay with association already exists.']);
             }
         }
     } else {
-        // If no barangay is provided, return error or handle as needed
         return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay is required']);
     }
-
-    // Generate the control number
-    $controlNumber = $this->generateControlNumber();
 
     // Create farmer and link to the affiliation
     $farmer = Farmer::create([
@@ -108,9 +105,9 @@ class FarmersController extends Controller
         'last_name' => $request->last_name,
         'middle_name' => $request->middle_name,
         'extension' => $request->extension,
-        'barangay' => $request->name_of_barangay, // Store barangay in the farmers table
-        'affiliation_id' => $affiliation->id, // Link to the affiliation
-        'control_number' => $controlNumber,
+        'barangay' => $request->name_of_barangay,
+        'affiliation_id' => $affiliation->id,
+        'control_number' => $request->control_number, // Use user-provided control number
         'birthdate' => $request->birthdate,
         'added_by' => auth()->user()->id,
     ]);
@@ -126,38 +123,13 @@ class FarmersController extends Controller
             'affiliation_id' => $affiliation->id,
         ]);
 
-        // Link user to farmer
         $farmer->user_id = $user->id;
         $farmer->save();
     }
 
-    // Redirect back with success message
     return redirect()->back()->with('success', 'Farmer added successfully!');
 }
 
-
-
-
-
-
-private function generateControlNumber()
-{
-    // Get the last farmer record based on control_number (if any)
-    $lastFarmer = Farmer::orderBy('id', 'desc')->first();
-    
-    // Default to '000001' if there are no records
-    $serialNumber = $lastFarmer ? (substr($lastFarmer->control_number, -6) + 1) : 1;
-    $serialNumber = str_pad($serialNumber, 6, '0', STR_PAD_LEFT); // Ensure it's 6 digits
-    
-    // The fixed parts of the control number
-    $yearCode = '08';     // Example: Fixed year part
-    $barangayCode = '64'; // Example: Fixed barangay code
-    $associationCode = '02'; // Example: Fixed association code
-    $districtCode = '037';  // Example: Fixed district code
-    
-    // Construct and return the full control number
-    return "$yearCode-$barangayCode-$associationCode-$districtCode-$serialNumber";
-}
 
 
 

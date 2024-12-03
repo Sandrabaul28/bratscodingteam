@@ -51,7 +51,10 @@
             <div class="form-row mb-3">
                 <div class="col-12 col-md-6">
                     <label for="control_number">Reference No. / Control No.</label>
-                    <input type="text" name="control_number" id="control_number" placeholder="08-64-02-037-000001" class="form-control form-control-sm" value="{{ old('control_number') }}" readonly>            
+                    <input type="text" name="control_number" id="control_number" placeholder="08-64-02-037-000001" 
+                        class="form-control form-control-sm" 
+                        value="{{ old('control_number', '08-64-02-') }}" 
+                        required>            
                 </div>
                 <div class="col-12 col-md-6">
                     <label for="birthdate">Birthdate</label>

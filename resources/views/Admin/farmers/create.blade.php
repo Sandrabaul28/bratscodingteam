@@ -48,12 +48,16 @@
             </div>
         </div>
 
-        <!-- Control Number at Birthdate Fields -->
+        <!-- Control Number at Birthdate Fields --> 
         <div class="form-row mb-3">
             <div class="col-12 col-md-6">
                 <label for="control_number">Reference No. / Control No.</label>
-                <input type="text" name="control_number" id="control_number" placeholder="08-64-02-037-000001" class="form-control form-control-sm" value="{{ old('control_number') }}" readonly>            
+                <input type="text" name="control_number" id="control_number" placeholder="08-64-02-037-000001" 
+                    class="form-control form-control-sm" 
+                    value="{{ old('control_number', '08-64-02-') }}" 
+                    required>            
             </div>
+
             <div class="col-12 col-md-6">
                 <label for="birthdate">Birthdate</label>
                 <input type="date" name="birthdate" id="birthdate" class="form-control form-control-sm">
@@ -68,46 +72,6 @@
                 <datalist id="barangays">
                     @foreach($uniqueBarangays as $barangay)
                         <option value="{{ $barangay }}">
-                        <option value="Beniton"></option>
-                        <option value="Buenavista"></option>
-                        <option value="Anahao"></option>
-                        <option value="Taytagan"></option>
-                        <option value="Dao"></option>
-                        <option value="Divisoria"></option>
-                        <option value="Esperanza"></option>
-                        <option value="Hilaan"></option>
-                        <option value="Himakilo"></option>
-                        <option value="Malbago"></option>
-                        <option value="Mauylab"></option>
-                        <option value="Paku"></option>
-                        <option value="Catoogan"></option>
-                        <option value="Lawgawan"></option>
-                        <option value="Lanao"></option>
-                        <option value="Poblacion"></option>
-                        <option value="Santa Cruz"></option>
-                        <option value="San Ramon"></option>
-                        <option value="Santo Niño"></option>
-                        <option value="Sampongon"></option>
-                        <option value="Talisay"></option>
-                        <option value="Hitawos"></option>
-                        <option value="Tuburan"></option>
-                        <option value="Union"></option>
-                        <option value="Taa"></option>
-                        <option value="Cawayanan"></option>
-                        <option value="Mahayahay"></option>
-                        <option value="San Vicente"></option>
-                        <option value="Olisihan"></option>
-                        <option value="Bunga"></option>
-                        <option value="Pamahawan"></option>
-                        <option value="Pangi"></option>
-                        <option value="Hibagwan"></option>
-                        <option value="Pamigsian"></option>
-                        <option value="Casao"></option>
-                        <option value="Catmon"></option>
-                        <option value="Guinsangaan"></option>
-                        <option value="Pong-on"></option>
-                        <option value="Banahao"></option>
-                        <option value="Baugo"></option>
                     @endforeach
                 </datalist>
             </div>

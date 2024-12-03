@@ -66,30 +66,46 @@ class AggregatorFarmersController extends Controller
         'last_name' => 'required|string|max:255',
         'middle_name' => 'nullable|string|max:255',
         'extension' => 'nullable|string|max:255',
-        'name_of_barangay' => 'nullable|string|max:255', // Validate barangay
-        'name_of_association' => 'nullable|string|max:255', // Validate association
+        'name_of_barangay' => 'nullable|string|max:255',
+        'name_of_association' => 'nullable|string|max:255',
         'birthdate' => 'nullable|date',
-        // Make email and password optional
-        'email' => 'nullable|email|unique:users,email',  
-        'password' => 'nullable|min:6|confirmed', // Password is required only if provided
+        'email' => 'nullable|email',
+        'password' => 'nullable|min:6|confirmed',
+        'control_number' => [
+            'required',
+            'string',
+            'regex:/^08-64-02-\d{3}-\d{6}$/', // Accepts format: 08-64-02-XXX-YYYYYY
+            'unique:farmers,control_number',  // Ensures uniqueness
+        ],
     ]);
 
-    // Check if barangay and association exist in the Affiliation table
-    if ($request->name_of_association) {
-        // Check for the combination of barangay and association
-        $affiliation = Affiliation::firstOrCreate([
-            'name_of_barangay' => $request->name_of_barangay,
-            'name_of_association' => $request->name_of_association,
-        ]);
+    // Check if barangay is provided
+    if ($request->name_of_barangay) {
+        // Check if association is provided
+        if ($request->name_of_association) {
+            // If both barangay and association exist, create affiliation
+            $affiliation = Affiliation::firstOrCreate([
+                'name_of_barangay' => $request->name_of_barangay,
+                'name_of_association' => $request->name_of_association,
+            ]);
+        } else {
+            // If only barangay is provided, create affiliation with barangay
+            $affiliation = Affiliation::firstOrCreate([
+                'name_of_barangay' => $request->name_of_barangay,
+            ]);
+
+            // Ensure that if the barangay has an association, it's properly handled
+            if ($affiliation->name_of_association) {
+                return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay with association already exists.']);
+            }
+        }
     } else {
-        // Only check for the barangay if there's no association
-        $affiliation = Affiliation::firstOrCreate([
-            'name_of_barangay' => $request->name_of_barangay,
-        ]);
+        // Return error if barangay is missing
+        return redirect()->back()->withErrors(['name_of_barangay' => 'Barangay is required']);
     }
 
-    // Generate the control number
-    $controlNumber = $this->generateControlNumber();
+    // Use user-provided control number or generate a new one if not provided
+    $controlNumber = $request->control_number;
 
     // Initialize the user variable
     $user = null;
@@ -101,21 +117,21 @@ class AggregatorFarmersController extends Controller
             'last_name' => $request->last_name,
             'middle_name' => $request->middle_name,
             'extension' => $request->extension,
-            'affiliation_id' => $request->affiliation_id,
+            'affiliation_id' => $affiliation->id,
             'email' => $request->email,
             'password' => bcrypt($request->password), // Hash the password
             'role_id' => 2, // Set the appropriate role (adjust as needed)
         ]);
     }
 
-    // Create farmer and link to the affiliation
+    // Create farmer and link to the affiliation and user
     $farmer = Farmer::create([
         'first_name' => $request->first_name,
         'last_name' => $request->last_name,
         'middle_name' => $request->middle_name,
         'extension' => $request->extension,
         'affiliation_id' => $affiliation->id, // Link to the affiliation
-        'control_number' => $controlNumber,
+        'control_number' => $controlNumber, // Use user-provided control number
         'birthdate' => $request->birthdate,
         'added_by' => auth()->user()->id, // Link to the current logged-in user (admin/aggregator)
         'user_id' => $user ? $user->id : null, // Link the farmer to the user if created
@@ -125,26 +141,6 @@ class AggregatorFarmersController extends Controller
     return redirect()->back()->with('success', 'Farmer added successfully!');
 }
 
-
-
-private function generateControlNumber()
-{
-    // Get the last farmer record based on control_number (if any)
-    $lastFarmer = Farmer::orderBy('id', 'desc')->first();
-    
-    // Default to '000001' if there are no records
-    $serialNumber = $lastFarmer ? (substr($lastFarmer->control_number, -6) + 1) : 1;
-    $serialNumber = str_pad($serialNumber, 6, '0', STR_PAD_LEFT); // Ensure it's 6 digits
-    
-    // The fixed parts of the control number
-    $yearCode = '08';     // Example: Fixed year part
-    $barangayCode = '64'; // Example: Fixed barangay code
-    $associationCode = '02'; // Example: Fixed association code
-    $districtCode = '037';  // Example: Fixed district code
-    
-    // Construct and return the full control number
-    return "$yearCode-$barangayCode-$associationCode-$districtCode-$serialNumber";
-}
 
 
     public function show(Farmer $farmer)

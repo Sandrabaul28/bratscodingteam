@@ -41,12 +41,16 @@
 <body>
     <h4>HIGH VALUED CROPS DEVELOPMENT PROGRAM (HVCDP)</h4>
     
-    @if($farmers->isNotEmpty())
-        <h4>Barangay: {{ $farmers->first()->affiliation->name_of_barangay ?? 'N/A' }} - {{ $farmers->first()->affiliation->name_of_association }}</h4>
-    @else
-        <h4>Barangay: N/A</h4>
-    @endif
+    @php
+    $barangay = request('barangay');
+@endphp
 
+@if($farmers->isNotEmpty())
+    <h4>Barangay: {{ $barangay ? $farmers->first()->affiliation->name_of_barangay ?? 'N/A' : 'ALL' }} - 
+    {{ $barangay ? $farmers->first()->affiliation->name_of_association : 'ALL' }}</h4>
+@else
+    <h4>Barangay: ALL</h4>
+@endif
     <table>
         <thead>
             <tr>

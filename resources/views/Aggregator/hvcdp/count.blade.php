@@ -158,7 +158,8 @@
                                 <thead>
                                     <tr>
                                         <th>Name of Farmer</th>
-                                        <th>Affiliation</th>
+                                        <th>Barangay</th>
+                                        <th>Association</th>
                                         <th>Plants (Name and Count)</th>
                                     </tr>
                                 </thead>
@@ -172,9 +173,8 @@
                                             if (!isset($groupedInventory[$crop->farmer_id])) {
                                                 $groupedInventory[$crop->farmer_id] = [
                                                     'farmer_name' => $crop->first_name . ' ' . $crop->last_name,
-                                                    'affiliation' => $crop->name_of_association 
-                                                                    ? $crop->name_of_association . ' - ' . $crop->name_of_barangay 
-                                                                    : $crop->name_of_barangay,
+                                                    'barangay' => $crop->name_of_barangay, // Show barangay separately
+                                                    'association' => $crop->name_of_association, // Show association separately
                                                     'added_by_first_name' => $crop->added_by_first_name,
                                                     'added_by_last_name' => $crop->added_by_last_name,
                                                     'plants' => []
@@ -187,7 +187,8 @@
                                     @foreach($groupedInventory as $farmerId => $group)
                                         <tr>
                                             <td>{{ $group['farmer_name'] }}</td>
-                                            <td>{{ $group['affiliation'] }}</td>
+                                            <td>{{ $group['barangay'] }}</td> <!-- Display barangay here -->
+                                            <td>{{ $group['association'] ?? 'N/A' }}</td> <!-- Display association here (or 'N/A' if not available) -->
                                             <td>
                                                 <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ $farmerId }}" aria-expanded="false" aria-controls="collapse-{{ $farmerId }}">
                                                     <i class="fa fa-arrow-circle-down" aria-hidden="true"></i> View Plants
@@ -197,7 +198,7 @@
 
                                         <!-- Collapsible rows for plant details -->
                                         <tr id="collapse-{{ $farmerId }}" class="collapse">
-                                            <td colspan="3">
+                                            <td colspan="4"> <!-- Adjusted colspan to 4 -->
                                                 <table class="table table-sm table-bordered">
                                                     <thead>
                                                         <tr>

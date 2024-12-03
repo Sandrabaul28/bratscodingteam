@@ -38,8 +38,6 @@ class UserEncodeController extends Controller
 
 
 
-
-
     public function store(Request $request)
 {
     $user = Auth::user();

@@ -44,7 +44,7 @@ class CountController extends Controller
         $plants = Plant::all(); // Get all plants for the form
 
         // Return the view with inventory data
-        return view('admin.hvcdp.count', compact('inventoryCrops', 'farmers', 'plants'), [
+        return view('Admin.hvcdp.count', compact('inventoryCrops', 'farmers', 'plants'), [
             'title' => 'HVCDP - Counts'
         ]);
     }
@@ -70,7 +70,7 @@ class CountController extends Controller
         InventoryValuedCrop::create($request->all());
 
         // Redirect to the count view with success message
-        return redirect()->route('admin.hvcdp.count')->with('success', 'Crop added successfully.');
+        return redirect()->route('Admin.hvcdp.count')->with('success', 'Crop added successfully.');
     }
 
     public function edit($id)
@@ -88,7 +88,7 @@ class CountController extends Controller
     $plants = Plant::all(); // Assumes you want to allow changing plants
 
     // Ibalik ang view kasama ang crop, farmer id, inventory crops, at plants
-    return view('admin.inventory.edit', compact('crop', 'inventoryCrops', 'farmerId', 'plants'));
+    return view('Admin.inventory.edit', compact('crop', 'inventoryCrops', 'farmerId', 'plants'));
 }
 
 

@@ -37,7 +37,7 @@ class FarmersController extends Controller
 
 
  
-    public function create()
+public function create()
 {
     // Fetch all affiliations 
     $affiliations = Affiliation::all();
@@ -51,7 +51,7 @@ class FarmersController extends Controller
 
     
     // Pass affiliations, uniqueBarangays, and uniqueAssociations to the create view
-    return view('admin.farmers.create', compact('affiliations', 'uniqueBarangays', 'uniqueAssociations', 'farmers'), [
+    return view('Admin.farmers.create', compact('affiliations', 'uniqueBarangays', 'uniqueAssociations', 'farmers'), [
         'title' => 'Add Farmer'
     ]);
 }

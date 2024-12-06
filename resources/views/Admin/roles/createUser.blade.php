@@ -11,75 +11,84 @@
                 {{ session('success') }}
             </div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif 
 <form action="{{ route('admin.roles.storeUser') }}" method="POST">
-            @csrf
+    @csrf
 
-            <div class="form-row mb-3">
-                <div class="col">
-                    <label for="first_name">First Name <span style="color: red;">*</span></label>
-                    <input type="text" name="first_name" placeholder="First name" class="form-control form-control-sm" required>
-                </div>
-                <div class="col">
-                    <label for="last_name">Last Name <span style="color: red;">*</span></label>
-                    <input type="text" name="last_name" placeholder="Last name" class="form-control form-control-sm" required>
-                </div>
-            </div>
+    <div class="form-row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="first_name">First Name <span style="color: red;">*</span></label>
+            <input type="text" name="first_name" placeholder="First name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="last_name">Last Name <span style="color: red;">*</span></label>
+            <input type="text" name="last_name" placeholder="Last name" class="form-control form-control-sm" required>
+        </div>
+    </div>
 
-            <div class="form-row mb-3">
-                <div class="col">
-                    <label for="middle_name">Middle Name <span style="color: red;">*</span> (Middle Initial)</label>
-                    <input type="text" name="middle_name" placeholder="Middle Inital" class="form-control form-control-sm">
-                </div>
-                <div class="col">
-                    <label for="extension">Extension <span style="color: red;">*</span> (e.g., Jr, Sr)</label>
-                    <input type="text" name="extension" placeholder="jr. , sr. etc." class="form-control form-control-sm">
-                </div>
-            </div>
+    <div class="form-row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="middle_name">Middle Name <span style="color: red;">*</span> (Middle Initial)</label>
+            <input type="text" name="middle_name" placeholder="Middle Initial" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="extension">Extension <span style="color: red;">*</span> (e.g., Jr, Sr)</label>
+            <input type="text" name="extension" placeholder="Jr., Sr., etc." class="form-control form-control-sm">
+        </div>
+    </div>
 
-            <div class="form-row mb-3">
-                <div class="col">
-                    <label for="name_of_barangay">Barangay</label>
-                    <input list="barangays" name="name_of_barangay" class="form-control form-control-sm" required placeholder="Select Barangay">
-                    <datalist id="barangays">
-                        @foreach($affiliations as $affiliation)
-                            @if ($affiliation->name_of_barangay)
-                                <option value="{{ $affiliation->name_of_barangay }}">
-                            @endif
-                        @endforeach
-                    </datalist>
-                </div>
-        
-                <div class="col">
-                    <label for="email">Email</label>
-                    <input type="email" name="email" placeholder="sample@gmail.com" class="form-control form-control-sm" required>
-                </div>
+    <div class="form-row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="name_of_barangay">Barangay</label>
+            <input list="barangays" name="name_of_barangay" class="form-control form-control-sm" required placeholder="Select Barangay">
+            <datalist id="barangays">
+                @foreach($affiliations as $affiliation)
+                    @if ($affiliation->name_of_barangay)
+                        <option value="{{ $affiliation->name_of_barangay }}">
+                    @endif
+                @endforeach
+            </datalist>
+        </div>
+    
+        <div class="col-12 col-md-6">
+            <label for="email">Email</label>
+            <input type="email" name="email" placeholder="sample@gmail.com" class="form-control form-control-sm" required>
+        </div>
+    </div>
 
-                <div class="col">
-                    <label for="password">Password</label>
-                    <input type="password" name="password" placeholder="************" class="form-control form-control-sm @error('password') is-invalid @enderror" required>
-                    @error('password')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
+    <div class="form-row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="password">Password</label>
+            <input type="password" name="password" placeholder="************" class="form-control form-control-sm @error('password') is-invalid @enderror" required>
+            @error('password')
+                <div class="invalid-feedback">
+                    {{ $message }}
                 </div>
-                <div class="col">
-                    <label for="password_confirmation">Confirm Password</label>
-                    <input type="password" name="password_confirmation" placeholder="************" class="form-control form-control-sm" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="role">Role</label>
-                    <select name="role_id" class="form-control form-control-sm">
-                        @foreach($roles as $role)
-                            <option value="{{ $role->id }}">{{ $role->role_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-danger">Add</button>
-
-        </form> 
+            @enderror
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="password_confirmation">Confirm Password</label>
+            <input type="password" name="password_confirmation" placeholder="************" class="form-control form-control-sm" required>
+        </div>
+        <div class="form-group mb-3">
+        <label for="role">Role</label>
+        <select name="role_id" class="form-control form-control-sm">
+            @foreach($roles as $role)
+                <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+            @endforeach
+        </select>
+    </div>
+    </div>
+    <button type="submit" class="btn btn-danger">Add</button>
+</form>
 
     </div>
 </div>

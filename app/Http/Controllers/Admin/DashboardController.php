@@ -69,7 +69,7 @@ class DashboardController extends Controller
     // Get total plants
     $totalPlants = Plant::count(); 
 
-    return view('admin.dashboard.index', compact('totalUsers', 'totalPlants', 'plantsData', 'monthlyData', 'totalData', 'totalBarangay', 'totalAffiliation'), [
+    return view('Admin.dashboard.index', compact('totalUsers', 'totalPlants', 'plantsData', 'monthlyData', 'totalData', 'totalBarangay', 'totalAffiliation'), [
         'title' => 'Admin | Dashboard'
     ]); // Passing the variable to the view
 }

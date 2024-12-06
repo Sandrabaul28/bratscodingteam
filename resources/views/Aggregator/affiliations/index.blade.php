@@ -20,47 +20,46 @@
                     <label for="name_of_barangay">Name of Barangay <span style="color: red;">*</span></label>
                     <input list="barangays" name="name_of_barangay" placeholder="Barangay" class="form-control form-control-sm" required>
                     <datalist id="barangays">
+                        <option value="Anahao"></option>
+                        <option value="Banahao"></option>
+                        <option value="Baugo"></option>
                         <option value="Beniton"></option>
                         <option value="Buenavista"></option>
-                        <option value="Anahao"></option>
-                        <option value="Taytagan"></option>
+                        <option value="Bunga"></option>
+                        <option value="Casao"></option>
+                        <option value="Catmon"></option>
+                        <option value="Catuogan"></option>
+                        <option value="Cawayanan"></option>
                         <option value="Dao"></option>
                         <option value="Divisoria"></option>
                         <option value="Esperanza"></option>
+                        <option value="Guinsangaan"></option>
+                        <option value="Hibagwan"></option>
                         <option value="Hilaan"></option>
                         <option value="Himakilo"></option>
+                        <option value="Hitawos"></option>
+                        <option value="Lanao"></option>
+                        <option value="Lawgawan"></option>
+                        <option value="Mahayahay"></option>
                         <option value="Malbago"></option>
                         <option value="Mauylab"></option>
+                        <option value="Olisihan"></option>
                         <option value="Paku"></option>
-                        <option value="Catoogan"></option>
-                        <option value="Lawgawan"></option>
-                        <option value="Lanao"></option>
+                        <option value="Pamahawan"></option>
+                        <option value="Pamigsian"></option>
+                        <option value="Pangi"></option>
                         <option value="Poblacion"></option>
-                        <option value="Santa Cruz"></option>
-                        <option value="San Ramon"></option>
-                        <option value="Santo Niño"></option>
+                        <option value="Pong-on"></option>
                         <option value="Sampongon"></option>
+                        <option value="San Ramon"></option>
+                        <option value="San Vicente"></option>
+                        <option value="Santa Cruz"></option>
+                        <option value="Sto. Niño"></option>
+                        <option value="Taa"></option>
                         <option value="Talisay"></option>
-                        <option value="Hitawos"></option>
+                        <option value="Taytagan"></option>
                         <option value="Tuburan"></option>
                         <option value="Union"></option>
-                        <option value="Taa"></option>
-                        <option value="Cawayanan"></option>
-                        <option value="Mahayahay"></option>
-                        <option value="San Vicente"></option>
-                        <option value="Olisihan"></option>
-                        <option value="Bunga"></option>
-                        <option value="Pamahawan"></option>
-                        <option value="Pangi"></option>
-                        <option value="Hibagwan"></option>
-                        <option value="Pamigsian"></option>
-                        <option value="Casao"></option>
-                        <option value="Catmon"></option>
-                        <option value="Guinsangaan"></option>
-                        <option value="Pong-on"></option>
-                        <option value="Banahao"></option>
-                        <option value="Baugo"></option>
-                        <option value="Matlang"></option>
                     </datalist>
                 </div>
                 <div class="col">
@@ -76,16 +75,17 @@
 <hr>
 <!-- Display the list of affiliations -->
 <div class="card shadow mb-4">
-    <div class="card-header py-3">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 text-success">AFFILIATION LISTS</h6>
+        <input type="text" id="searchInput" class="form-control form-control-sm w-25" placeholder="Search...">
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered mb-4">
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-bordered mb-4" id="affiliationTable">
                 <thead>
                     <tr>
-                        <th>Name of Association</th>
                         <th>Name of Barangay</th>
+                        <th>Name of Association</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -93,8 +93,9 @@
                     @foreach($affiliations as $affiliation)
                         <tr>
                             <!-- Display NO ASSOCIATION if association is null -->
-                            <td>{{ $affiliation->name_of_association ?? 'NO ASSOCIATION' }}</td>
                             <td>{{ $affiliation->name_of_barangay }}</td>
+
+                            <td>{{ $affiliation->name_of_association ?? 'no association' }}</td>
                             <td>
                                 <!-- Edit and Delete buttons -->
                                 <button class="btn btn-warning btn-sm" onclick="editAffiliation({{ $affiliation }})"><i class="fas fa-edit"></i></button>
@@ -107,6 +108,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#affiliationTable tbody tr');
+
+        rows.forEach(row => {
+            let barangay = row.cells[0].textContent.toLowerCase();
+            let association = row.cells[1].textContent.toLowerCase();
+            if (barangay.includes(filter) || association.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
 
 <!-- Edit Affiliation Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">

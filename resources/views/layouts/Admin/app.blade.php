@@ -107,7 +107,7 @@
                         <!-- <h6 class="collapse-header">Lists:</h6> -->
                               <a class="collapse-item" href="{{ route('admin.roles.createUser')}}">Admin User Management</a>
                               <a class="collapse-item" href="{{ route('admin.farmers.create') }}"> Farmer Records</a>
-                              <a class="collapse-item" href="{{ route('admin.affiliations.index')}}">Affiliation Directory</a>
+                              <!-- <a class="collapse-item" href=""></a> -->
 
                     </div>
                 </div>
@@ -124,6 +124,11 @@
                 <a class="nav-link" href="{{ route('admin.plants.index')}}">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Plant Database</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.affiliations.index')}}">
+                    <i class="fas fa-fw fa-chart-area"></i>
+                    <span>Affiliation Directory</span></a>
             </li>
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">

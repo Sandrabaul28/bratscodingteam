@@ -30,7 +30,7 @@ class FarmersController extends Controller
 
 
     // Pass filtered farmers, affiliations, and unique filters to the view
-    return view('admin.farmers.create', compact('farmers', 'affiliations', 'uniqueBarangays', 'uniqueAssociations'), [
+    return view('Admin.farmers.create', compact('farmers', 'affiliations', 'uniqueBarangays', 'uniqueAssociations'), [
         'title' => 'Farmers List'
     ]);
 }

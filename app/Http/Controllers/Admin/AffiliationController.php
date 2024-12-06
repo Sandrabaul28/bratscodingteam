@@ -14,7 +14,7 @@ class AffiliationController extends Controller
         $affiliations = Affiliation::all();
 
         // Ibalik ang view kasama ang affiliations data
-        return view('admin.affiliations.index', compact('affiliations'), [
+        return view('Admin.affiliations.index', compact('affiliations'), [
             'title' => 'Create Affiliation'
         ]);
     }

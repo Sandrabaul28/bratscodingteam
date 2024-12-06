@@ -26,7 +26,7 @@ class RoleController extends Controller
         $roles = Role::whereIn('id', [1, 3])->get();
 
         $affiliations = Affiliation::select('name_of_barangay')->distinct()->get(); // Kumuha lang ng mga unique na barangay
-        return view('admin.roles.createUser', compact('roles', 'affiliations', 'users'), [
+        return view('Admin.roles.createUser', compact('roles', 'affiliations', 'users'), [
             'title' => 'Create User',
             'users' => User::all()
         ]);
@@ -77,7 +77,7 @@ class RoleController extends Controller
         $user = User::findOrFail($id);
         $roles = Role::all();
         $affiliations = Affiliation::all();
-        return view('admin.roles.edit-user', compact('user', 'roles', 'affiliations'));
+        return view('Admin.roles.edit-user', compact('user', 'roles', 'affiliations'));
     }
 
     public function updateUser(Request $request, $id)

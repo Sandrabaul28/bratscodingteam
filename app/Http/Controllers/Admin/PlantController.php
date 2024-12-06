@@ -13,7 +13,7 @@ class PlantController extends Controller
     {
         $plants = Plant::all();
         $plants = Plant::with('varieties')->get(); // Adjust the pagination as needed
-        return view('admin.plants.index', compact('plants'), [
+        return view('Admin.plants.index', compact('plants'), [
             'title' => 'CROPS | Plants'
         ]);
     }

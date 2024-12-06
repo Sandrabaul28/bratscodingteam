@@ -30,7 +30,7 @@ class MonthlyInventoryController extends Controller
         $plants = Plant::all();
         $affiliations = Affiliation::all();
 
-        return view('admin.inventory.index', compact('inventories', 'farmers', 'plants', 'affiliations'), [
+        return view('Admin.inventory.index', compact('inventories', 'farmers', 'plants', 'affiliations'), [
             'title' => 'Monthly Inventory'
         ]);
     }

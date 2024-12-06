@@ -67,7 +67,7 @@ class HVCDPController extends Controller
         return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
     })->unique();
 
-    return view('admin.hvcdp.index', compact('affiliations', 'farmers', 'uniquePlants'), [
+    return view('Admin.hvcdp.index', compact('affiliations', 'farmers', 'uniquePlants'), [
         'title' => 'HVCDP - Records'
     ]);
 }
@@ -259,7 +259,7 @@ public function store(Request $request)
         return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
     })->unique()->values();
 
-    return view('admin.hvcdp.print', compact('farmers', 'uniquePlants'), [
+    return view('Admin.hvcdp.print', compact('farmers', 'uniquePlants'), [
         'title' => 'HVCDP Print'
     ]);
 }

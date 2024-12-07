@@ -151,7 +151,7 @@ class MonthlyInventoryController extends Controller
         $plants = Plant::all(); // Fetch plants
         $affiliations = Affiliation::all(); // Fetch affiliations
 
-        return view('admin.inventory.index', compact('inventory', 'farmers', 'plants', 'affiliations'));
+        return view('Admin.inventory.index', compact('inventory', 'farmers', 'plants', 'affiliations'));
     }
 
 
@@ -267,7 +267,7 @@ class MonthlyInventoryController extends Controller
         $records = MonthlyRecord::with(['farmer', 'plant', 'affiliation'])->get();
 
         // Pass the records to the view
-        return view('admin.inventory.history', compact('records'), [
+        return view('Admin.inventory.history', compact('records'), [
             'records' => $records,  // Use 'records' here
             'title' => 'View Monthly Records',
         ]);
@@ -303,7 +303,7 @@ class MonthlyInventoryController extends Controller
                                         ->whereYear('created_at', $year)
                                         ->get();
 
-        return view('admin.inventory.preview', compact('inventories'));
+        return view('Admin.inventory.preview', compact('inventories'));
     }
 
 
@@ -326,7 +326,7 @@ class MonthlyInventoryController extends Controller
             })->get();
 
         // I-render ang Blade view alang sa preview
-        return view('admin.inventory.preview_history', ['inventories' => $inventories]);
+        return view('Admin.inventory.preview_history', ['inventories' => $inventories]);
     }
 
     public function exportHistory($month, $year)

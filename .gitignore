@@ -17,4 +17,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-/Tesseract-OCR
+/public/Tesseract-OCR

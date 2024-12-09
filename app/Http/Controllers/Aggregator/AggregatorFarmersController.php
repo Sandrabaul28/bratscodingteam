@@ -32,7 +32,7 @@ class AggregatorFarmersController extends Controller
     // Fetch all affiliations
     $affiliations = Affiliation::all();
 
-    return view('aggregator.farmers.create', compact('farmers', 'affiliations', 'uniqueBarangays', 'uniqueAssociations'), [
+    return view('Aggregator.farmers.create', compact('farmers', 'affiliations', 'uniqueBarangays', 'uniqueAssociations'), [
         'title' => 'Farmers List',
     ]);
 }
@@ -52,7 +52,7 @@ class AggregatorFarmersController extends Controller
         $uniqueAssociations = Affiliation::distinct()->pluck('name_of_association');  // Array of strings
 
         // Pass affiliations and farmers to the create view
-        return view('aggregator.farmers.create', compact('affiliations', 'farmers', 'uniqueAssociations', 'uniqueBarangays'), [
+        return view('Aggregator.farmers.create', compact('affiliations', 'farmers', 'uniqueAssociations', 'uniqueBarangays'), [
             'title' => 'Add Farmer'
         ]);
     }

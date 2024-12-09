@@ -50,7 +50,7 @@ class AggregatorDashboardController extends Controller
                                     ->distinct('name_of_barangay')
                                     ->count('name_of_barangay');
 
-        return view('aggregator.dashboard.index', compact('totalUsers', 'totalPlants', 'plantsData', 'totalBarangay', 'totalAffiliation'), [
+        return view('Aggregator.dashboard.index', compact('totalUsers', 'totalPlants', 'plantsData', 'totalBarangay', 'totalAffiliation'), [
             'title' => 'Aggregator | Dashboard'
         ]); // Passing the variable to the view
     }

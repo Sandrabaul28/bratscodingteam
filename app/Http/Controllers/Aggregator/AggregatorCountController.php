@@ -57,7 +57,7 @@ class AggregatorCountController extends Controller
         $plants = Plant::all();
 
         // Return the view with the data, ensuring no other changes to the query behavior
-        return view('aggregator.hvcdp.count', compact('inventoryCrops', 'farmers', 'plants'), [
+        return view('Aggregator.hvcdp.count', compact('inventoryCrops', 'farmers', 'plants'), [
             'title' => 'HVCDP - Counts'
         ]);
     }

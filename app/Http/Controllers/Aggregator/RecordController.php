@@ -69,7 +69,7 @@ class RecordController extends Controller
         return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
     })->unique();
 
-    return view('aggregator.hvcdp.index', compact('affiliations', 'farmers', 'uniquePlants'), [
+    return view('Aggregator.hvcdp.index', compact('affiliations', 'farmers', 'uniquePlants'), [
         'title' => 'HVCDP - Records'
     ]);
 }
@@ -86,13 +86,13 @@ class RecordController extends Controller
     public function show($id)
     {
         $farmer = Farmer::findOrFail($id);
-        return view('aggregator.hvcdp.show', compact('farmer'));
+        return view('Aggregator.hvcdp.show', compact('farmer'));
     }
 
     public function edit($id)
     {
         $farmer = Farmer::with('inventoryValuedCrops')->findOrFail($id);
-        return view('aggregator.hvcdp.edit', compact('farmer'));
+        return view('Aggregator.hvcdp.edit', compact('farmer'));
     }
 
     public function update(Request $request, $id)
@@ -199,7 +199,7 @@ class RecordController extends Controller
             return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
         })->unique()->values();
 
-        return view('aggregator.hvcdp.print', compact('farmers', 'uniquePlants'), [
+        return view('Aggregator.hvcdp.print', compact('farmers', 'uniquePlants'), [
             'title' => 'HVCDP Print'
         ]);
     }

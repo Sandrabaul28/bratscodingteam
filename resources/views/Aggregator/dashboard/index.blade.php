@@ -1,6 +1,6 @@
 {{-- resources/views/admin/dashboard/index.blade.php --}}
 
-@extends('layouts.aggregator.app')
+@extends('layouts.Aggregator.app')
 
 @section('content')
 <div class="container-fluid">

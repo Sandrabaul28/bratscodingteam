@@ -1,4 +1,4 @@
-@extends('layouts.aggregator.app')
+@extends('layouts.Aggregator.app')
 
 @section('content')
 <div class="card shadow mb-4">

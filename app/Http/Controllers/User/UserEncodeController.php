@@ -68,7 +68,7 @@ class UserEncodeController extends Controller
         if (!$latitude || !$longitude) {
             try {
                 $ocrText = (new TesseractOCR($imageFullPath))
-                    ->executable('arisecodingteam/Tesseract-OCR/tesseract.exe')
+                    ->executable('/home/bttovgt/public_html/subdomain/bci.slsubc.com/bratscodingteam/Tesseract-OCR/tesseract.exe')
                     ->lang('eng')
                     ->run();
 

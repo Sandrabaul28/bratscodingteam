@@ -31,7 +31,7 @@ class UserEncodeController extends Controller
         
 
         // Return the view with the filtered data
-        return view('user.encode.create_count', compact('inventoryCrops', 'farmers', 'plants'), [
+        return view('User.encode.create_count', compact('inventoryCrops', 'farmers', 'plants'), [
             'title' => 'HVCDP - Counts'
         ]);
     }
@@ -149,7 +149,7 @@ class UserEncodeController extends Controller
         $inventoryCrops = InventoryValuedCrop::with('plant')->where('farmer_id', $crop->farmer_id)->get();
 
         // Ibalik ang view kasama ang crop, farmer, at inventory crops
-        return view('user.inventory.edit', compact('crop', 'inventoryCrops', 'farmer'));
+        return view('User.inventory.edit', compact('crop', 'inventoryCrops', 'farmer'));
     }
 
 

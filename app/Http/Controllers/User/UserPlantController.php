@@ -14,7 +14,7 @@ class UserPlantController extends Controller
         
         $plants = Plant::all();
         $plants = Plant::with('varieties')->get(); // Adjust the pagination as needed
-        return view('user.plants.index', compact('plants'), [
+        return view('User.plants.index', compact('plants'), [
             'title' => 'CROPS | Plants'
         ]);
     }

@@ -16,7 +16,7 @@ class UserDashboardController extends Controller
         $totalPlants = Plant::count(); 
         $totalBarangay = Affiliation::count();
 
-        return view('user.dashboard.index', compact('totalPlants', 'totalBarangay'), [
+        return view('User.dashboard.index', compact('totalPlants', 'totalBarangay'), [
             'title' => 'User | Dashboard'
         ]);
     }

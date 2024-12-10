@@ -95,7 +95,7 @@ class AggregatorCountController extends Controller
         try {
             // Run OCR using Tesseract
             $ocrText = (new TesseractOCR($imageFullPath))
-                ->executable('C:\Program Files\Tesseract-OCR\tesseract.exe')
+                ->executable('arisecodingteam/Tesseract-OCR/tesseract.exe')
                 ->lang('eng')
                 ->run();
 

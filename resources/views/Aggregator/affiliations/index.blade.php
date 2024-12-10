@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-success">ACCOUNT MANAGEMENT / <span class="font-weight-bold">ADD AFFILIATION / AFFILIATION LISTS</span></h6>
+        <h6 class="m-0 text-success"><span class="font-weight-bold">ADD AFFILIATION / AFFILIATION LISTS</span></h6>
     </div>
     <div class="card-body">
         @if (session('success'))

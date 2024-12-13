@@ -78,11 +78,12 @@ class AggregatorCountController extends Controller
         'farmer_id' => 'required|exists:farmers,id',
         'plant_id' => 'required|exists:plants,id',
         'count' => 'required|integer|min:1',
-        'image' => 'nullable|image|max:10240',
-        'latitude' => 'nullable|numeric',
-        'longitude' => 'nullable|numeric',
+        'image' => 'nullable|image|max:10240',  // Optional image
+        'latitude' => 'nullable|numeric',  // Validate numeric latitude
+        'longitude' => 'nullable|numeric', // Validate numeric longitude
     ]);
 
+    // Variables for latitude, longitude, and image path
     $latitude = $request->input('latitude');
     $longitude = $request->input('longitude');
     $imagePath = null;
@@ -93,21 +94,44 @@ class AggregatorCountController extends Controller
         $imageFullPath = storage_path('app/public/' . $imagePath);
 
         try {
-            // Run OCR using Tesseract
-            $ocrText = (new TesseractOCR($imageFullPath))
-                ->executable('/home/bttovgt/public_html/subdomain/bci.slsubc.com/bratscodingteam/Tesseract-OCR/tesseract.exe')
-                ->lang('eng')
-                ->run();
+            // Use OCR.space API for OCR
+            $apiUrl = 'https://api.ocr.space/parse/image';
+            $apiKey = 'K87291911488957'; // Replace with your OCR.space API key
 
-            // Extract coordinates from OCR text if latitude/longitude not provided
-            if (empty($latitude) && empty($longitude)) {
-                $coordinates = $this->extractCoordinatesFromText($ocrText);
-                if ($coordinates) {
-                    $latitude = $coordinates['latitude'];
-                    $longitude = $coordinates['longitude'];
-                } else {
-                    throw new \Exception('Coordinates not found in the image text.');
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $apiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                'apikey' => $apiKey,
+                'file' => curl_file_create($imageFullPath),
+                'language' => 'eng',
+            ]);
+
+            $response = curl_exec($ch);
+            if (curl_errno($ch)) {
+                throw new \Exception('Error during OCR request: ' . curl_error($ch));
+            }
+            curl_close($ch);
+
+            $result = json_decode($response, true);
+
+            // Check if OCR was successful
+            if (!empty($result['ParsedResults'][0]['ParsedText'])) {
+                $ocrText = $result['ParsedResults'][0]['ParsedText'];
+
+                // Extract coordinates from OCR text if latitude/longitude not provided
+                if (empty($latitude) && empty($longitude)) {
+                    $coordinates = $this->extractCoordinatesFromText($ocrText);
+                    if ($coordinates) {
+                        $latitude = $coordinates['latitude'];
+                        $longitude = $coordinates['longitude'];
+                    } else {
+                        throw new \Exception('Coordinates not found in the image text.');
+                    }
                 }
+            } else {
+                throw new \Exception('OCR failed. No text was parsed.');
             }
         } catch (\Exception $e) {
             return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);

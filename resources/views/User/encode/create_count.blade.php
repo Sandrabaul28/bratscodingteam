@@ -24,59 +24,59 @@
             @endif
 
                 <form action="{{ route('user.count.store') }}" method="POST" enctype="multipart/form-data" id="crop-form">
-    @csrf
-    <div class="form-row">
-        <!-- Fixed Farmer Name Input -->
-        <div class="form-group col-md-4">
-            <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
-            <input type="text" id="farmer_name" name="farmer_name" class="form-control" value="{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}" readonly>
-            <input type="hidden" name="farmer_id" id="farmer_id" value="{{ Auth::user()->id }}">
-            <input type="hidden" id="affiliation_id" value="{{ Auth::user()->affiliation_id }}"> 
-            @if ($errors->has('farmer_id'))
-                <span class="text-danger">{{ $errors->first('farmer_id') }}</span>
-            @endif
-        </div>
+                @csrf
+                <div class="form-row">
+                    <!-- Fixed Farmer Name Input -->
+                    <div class="form-group col-md-4">
+                        <label for="farmer_name">Name of Farmer <span style="color: red;">*</span></label>
+                        <input type="text" id="farmer_name" name="farmer_name" class="form-control" value="{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}" readonly>
+                        <input type="hidden" name="farmer_id" id="farmer_id" value="{{ Auth::user()->id }}">
+                        <input type="hidden" id="affiliation_id" value="{{ Auth::user()->affiliation_id }}"> 
+                        @if ($errors->has('farmer_id'))
+                            <span class="text-danger">{{ $errors->first('farmer_id') }}</span>
+                        @endif
+                    </div>
 
-        <!-- Plant input -->
-        <div class="form-group col-md-4">
-            <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
-            <input list="plants" id="plant_name" name="plant_name" placeholder="Enter Plant" class="form-control" required>
-            <datalist id="plants">
-                @foreach($plants as $plant)
-                    <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
-                @endforeach
-            </datalist>
-            <input type="hidden" name="plant_id" id="plant_id">
-        </div>
+                    <!-- Plant input -->
+                    <div class="form-group col-md-4">
+                        <label for="plant_name">Name of Plant <span style="color: red;">*</span></label>
+                        <input list="plants" id="plant_name" name="plant_name" placeholder="Enter Plant" class="form-control" required>
+                        <datalist id="plants">
+                            @foreach($plants as $plant)
+                                <option value="{{ $plant->name_of_plants }}" data-id="{{ $plant->id }}"></option>
+                            @endforeach
+                        </datalist>
+                        <input type="hidden" name="plant_id" id="plant_id">
+                    </div>
 
-        <!-- Count input -->
-        <div class="form-group col-md-4">
-            <label for="count">Count <span style="color: red;">*</span></label>
-            <input type="number" name="count" placeholder="Enter Count" class="form-control" required>
-        </div>
+                    <!-- Count input -->
+                    <div class="form-group col-md-4">
+                        <label for="count">Count <span style="color: red;">*</span></label>
+                        <input type="number" name="count" placeholder="Enter Count" class="form-control" required>
+                    </div>
 
-        <!-- Latitude input -->
-        <div class="form-group col-md-4">
-            <label for="latitude">Latitude (Optional)</label>
-            <input type="text" name="latitude" id="latitude" placeholder="Enter Latitude" class="form-control">
-        </div>
+                    <!-- Latitude input -->
+                    <div class="form-group col-md-4">
+                        <label for="latitude">Latitude (Optional)</label>
+                        <input type="text" name="latitude" id="latitude" placeholder="Enter Latitude" class="form-control">
+                    </div>
 
-        <!-- Longitude input -->
-        <div class="form-group col-md-4">
-            <label for="longitude">Longitude (Optional)</label>
-            <input type="text" name="longitude" id="longitude" placeholder="Enter Longitude" class="form-control">
-        </div>
+                    <!-- Longitude input -->
+                    <div class="form-group col-md-4">
+                        <label for="longitude">Longitude (Optional)</label>
+                        <input type="text" name="longitude" id="longitude" placeholder="Enter Longitude" class="form-control">
+                    </div>
 
-        <!-- Image upload field -->
-        <div class="form-group col-md-4">
-            <label for="image">Upload Image (Optional)</label>
-            <input type="file" name="image" id="image" class="form-control" accept="image/*" >
-        </div>
-    </div>
+                    <!-- Image upload field -->
+                    <div class="form-group col-md-4">
+                        <label for="image">Upload Image (Optional)</label>
+                        <input type="file" name="image" id="image" class="form-control" accept="image/*" >
+                    </div>
+                </div>
 
-    <!-- Submit button -->
-    <button type="submit" class="btn btn-success">Add</button>
-</form>
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-success">Add</button>
+            </form>
 
 
             <script>

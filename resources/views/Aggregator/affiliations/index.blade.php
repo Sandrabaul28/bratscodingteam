@@ -68,7 +68,6 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-success">SAVE</button>
-            <a href="{{ route('aggregator.farmers.create') }}" class="btn btn-warning">Add Farmer</a>
         </form>
     </div>
 </div>

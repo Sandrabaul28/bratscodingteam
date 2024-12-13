@@ -67,17 +67,44 @@ class UserEncodeController extends Controller
 
         if (!$latitude || !$longitude) {
             try {
-                $ocrText = (new TesseractOCR($imageFullPath))
-                    ->executable('/home/bttovgt/public_html/subdomain/bci.slsubc.com/bratscodingteam/Tesseract-OCR/tesseract.exe')
-                    ->lang('eng')
-                    ->run();
+                // Use OCR API for OCR text extraction
+                $apiUrl = 'https://api.ocr.space/parse/image';
+                $apiKey = 'K87291911488957'; // Replace with your OCR.space API key
 
-                // Extract coordinates if not manually provided
-                $coordinates = $this->extractCoordinatesFromText($ocrText);
-                $latitude = $latitude ?? $coordinates['latitude'];
-                $longitude = $longitude ?? $coordinates['longitude'];
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $apiUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                    'apikey' => $apiKey,
+                    'file' => curl_file_create($imageFullPath),
+                    'language' => 'eng',
+                ]);
+
+                $response = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    throw new \Exception('Error during OCR request: ' . curl_error($ch));
+                }
+                curl_close($ch);
+
+                $result = json_decode($response, true);
+
+                // Check if OCR was successful
+                if (!empty($result['ParsedResults'][0]['ParsedText'])) {
+                    $ocrText = $result['ParsedResults'][0]['ParsedText'];
+
+                    // Extract coordinates from OCR text
+                    $coordinates = $this->extractCoordinatesFromText($ocrText);
+
+                    if ($coordinates) {
+                        $latitude = $coordinates['latitude'];
+                        $longitude = $coordinates['longitude'];
+                    }
+                } else {
+                    throw new \Exception('OCR failed. No text was parsed.');
+                }
             } catch (\Exception $e) {
-                return back()->withErrors(['ocr_error' => 'OCR failed: ' . $e->getMessage()]);
+                return back()->withErrors(['ocr_error' => 'Failed to process OCR: ' . $e->getMessage()]);
             }
         }
     }
@@ -87,15 +114,16 @@ class UserEncodeController extends Controller
         return redirect()->back()->withErrors(['coordinates' => 'Invalid latitude or longitude values.']);
     }
 
-    // Ensure farmer belongs to the user's affiliation
+    // Ensure farmer belongs to the user's affiliation (This can be customized based on your business logic)
+    // Assuming the user's affiliation is enough to ensure correct association
     $farmer = $user->farmer;
     if (!$farmer || $farmer->affiliation_id !== $user->affiliation_id) {
-        return redirect()->back()->withErrors(['farmer_id' => 'The selected farmer does not belong to your affiliation.']);
+        return redirect()->back()->withErrors(['affiliation' => 'The selected farmer does not belong to your affiliation.']);
     }
 
     // Save crop data
     InventoryValuedCrop::create([
-        'farmer_id' => $farmer->id,
+        'farmer_id' => $farmer->id, // Assuming you want to associate with the farmer
         'plant_id' => $request->input('plant_id'),
         'count' => $request->input('count'),
         'latitude' => $latitude,
@@ -107,27 +135,27 @@ class UserEncodeController extends Controller
     return redirect()->route('user.count.store')->with('success', 'Crop added successfully.');
 }
 
+/**
+ * Extract coordinates (latitude and longitude) from the OCR text.
+ *
+ * @param string $ocrText
+ * @return array|null
+ */
+private function extractCoordinatesFromText($ocrText)
+{
+    // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
+    preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
 
-    /**
-     * Extract coordinates (latitude and longitude) from the OCR text.
-     *
-     * @param string $ocrText
-     * @return array|null
-     */
-    private function extractCoordinatesFromText($ocrText)
-    {
-        // Regular expression for matching coordinates like "latitude: 0.156684, longitude: 51.520321"
-        preg_match('/latitude\s*[:=]?\s*([\-0-9\.]+)\s*longitude\s*[:=]?\s*([\-0-9\.]+)/i', $ocrText, $matches);
-
-        if (count($matches) > 2) {
-            return [
-                'latitude' => $matches[1],
-                'longitude' => $matches[2],
-            ];
-        }
-
-        return null;  // Return null if no coordinates found
+    if (count($matches) > 2) {
+        return [
+            'latitude' => $matches[1],
+            'longitude' => $matches[2],
+        ];
     }
+
+    return null;  // Return null if no coordinates found
+}
+
 
 
 

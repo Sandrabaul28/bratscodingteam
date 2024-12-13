@@ -101,7 +101,6 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                               <a class="collapse-item" href="{{ route('aggregator.farmers.create') }}">Farmer Records</a>
-                              <a class="collapse-item" href="{{ route('affiliations.index')}}">Affiliation Directory</a>
 
                     </div>
                 </div>
@@ -118,6 +117,11 @@
                 <a class="nav-link" href="{{ route('aggregator.plants.index')}}">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Plant Database</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('affiliations.index')}}">
+                    <i class="fas fa-fw fa-chart-area"></i>
+                    <span>Affiliation Directory</span></a>
             </li>
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">

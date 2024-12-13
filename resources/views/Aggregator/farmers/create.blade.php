@@ -70,46 +70,6 @@
                     <datalist id="barangays">
                         @foreach($uniqueBarangays as $barangay)
                             <option value="{{ $barangay }}">
-                            <option value="Beniton"></option>
-                            <option value="Buenavista"></option>
-                            <option value="Anahao"></option>
-                            <option value="Taytagan"></option>
-                            <option value="Dao"></option>
-                            <option value="Divisoria"></option>
-                            <option value="Esperanza"></option>
-                            <option value="Hilaan"></option>
-                            <option value="Himakilo"></option>
-                            <option value="Malbago"></option>
-                            <option value="Mauylab"></option>
-                            <option value="Paku"></option>
-                            <option value="Catoogan"></option>
-                            <option value="Lawgawan"></option>
-                            <option value="Lanao"></option>
-                            <option value="Poblacion"></option>
-                            <option value="Santa Cruz"></option>
-                            <option value="San Ramon"></option>
-                            <option value="Santo Niño"></option>
-                            <option value="Sampongon"></option>
-                            <option value="Talisay"></option>
-                            <option value="Hitawos"></option>
-                            <option value="Tuburan"></option>
-                            <option value="Union"></option>
-                            <option value="Taa"></option>
-                            <option value="Cawayanan"></option>
-                            <option value="Mahayahay"></option>
-                            <option value="San Vicente"></option>
-                            <option value="Olisihan"></option>
-                            <option value="Bunga"></option>
-                            <option value="Pamahawan"></option>
-                            <option value="Pangi"></option>
-                            <option value="Hibagwan"></option>
-                            <option value="Pamigsian"></option>
-                            <option value="Casao"></option>
-                            <option value="Catmon"></option>
-                            <option value="Guinsangaan"></option>
-                            <option value="Pong-on"></option>
-                            <option value="Banahao"></option>
-                            <option value="Baugo"></option>
                             @endforeach
                     </datalist>
                 </div>
@@ -284,7 +244,6 @@
                                     <p><strong>Birthdate:</strong> {{ $farmer->birthdate }}</p>
 
                                     <p><strong>Email:</strong> {{ optional($farmer->user)->email ?? 'N/A' }}</p> <!-- Use optional() to avoid errors -->
-                                    <p><strong>Added By:</strong> {{ optional($farmer->addedBy->role)->role_name ?? 'N/A' }}</p> <!-- Use optional() for safety -->
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

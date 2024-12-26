@@ -206,7 +206,7 @@
                                                             <th>Count</th>
                                                             <th>Latitude</th>
                                                             <th>Longitude</th>
-                                                            <th>Date Added</th>
+                                                            <th>Date & Time</th>
                                                             <th>Added by</th>
                                                             <th>Actions</th>
                                                         </tr>
@@ -218,7 +218,7 @@
                                                                 <td>{{ $plant->count }}</td>
                                                                 <td>{{ $plant->latitude }}</td>
                                                                 <td>{{ $plant->longitude }}</td>
-                                                                <td>{{ \Carbon\Carbon::parse($plant->created_at)->format('F d, Y') }}</td>
+                                                                <td>{{ \Carbon\Carbon::parse($plant->created_at)->timezone('Asia/Manila')->format('F d, Y h:i A') }}</td>
                                                                 <td>{{ $plant->added_by_first_name }} / {{ $plant->role_name }}</td>
                                                                 <td>
                                                                     <!-- Edit Button -->

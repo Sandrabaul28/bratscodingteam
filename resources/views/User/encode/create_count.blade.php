@@ -119,7 +119,7 @@
                             <th>Count</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
-                            <th>Date Added</th>
+                            <th>Date & Time</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -136,7 +136,7 @@
                                     <td>{{ $crop->count }}</td>
                                     <td>{{ $crop->latitude }}</td>
                                     <td>{{ $crop->longitude }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($crop->created_at)->format('F d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($crop->created_at)->timezone('Asia/Manila')->format('F d, Y h:i A') }}</td>
                                     <td>
                                         <!-- Edit Button -->
                                         <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal-{{ $crop->id }}">

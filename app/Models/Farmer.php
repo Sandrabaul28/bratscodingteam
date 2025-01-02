@@ -36,9 +36,9 @@ class Farmer extends Model
     }
 
     public function inventoryValuedCrops()
-    {
-        return $this->hasMany(InventoryValuedCrop::class);
-    }
+{
+    return $this->hasMany(InventoryValuedCrop::class, 'farmer_id')->orderBy('created_at', 'desc');
+}
 
     public static function getUniquePlants()
     {
@@ -74,6 +74,5 @@ class Farmer extends Model
     {
     return $this->hasMany(MonthlyRecord::class);
     }
-
 
 }

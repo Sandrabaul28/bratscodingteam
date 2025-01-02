@@ -71,7 +71,8 @@ return [
     */
 
     // config/app.php
-    'timezone' => env('APP_TIMEZONE', 'Asia/Manila'),
+    'timezone' => 'UTC', // O anumang timezone na ginagamit mo
+
 
 
     /*

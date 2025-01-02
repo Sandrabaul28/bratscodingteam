@@ -14,6 +14,7 @@ use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class HVCDPController extends Controller
 {
@@ -27,20 +28,21 @@ class HVCDPController extends Controller
         'inputted_data' => 'nullable|array', // Para sa pag-filter ng may data o walang data
     ]);
 
-    // I-query ang mga farmers
+    // I-query ang mga farmers kasama ang kanilang inventory at plants
     $farmers = Farmer::with('inventoryValuedCrops.plant')->newQuery();
 
-    // Kung may filter na provided para sa petsa
+    // If 'from_date' and 'to_date' are provided, filter by inventory_valued_crops' created_at
     if ($request->has('from_date') && $request->has('to_date')) {
-        // I-format ang petsa para sa timestamp
-        $fromDate = $request->from_date . ' 00:00:00'; // simula ng araw
-        $toDate = $request->to_date . ' 23:59:59'; // katapusan ng araw
+        $fromDate = \Carbon\Carbon::parse($request->from_date)->startOfDay();
+        $toDate = \Carbon\Carbon::parse($request->to_date)->endOfDay();
 
-        $farmers->whereBetween('created_at', [$fromDate, $toDate]);
+        $farmers->whereHas('inventoryValuedCrops', function ($query) use ($fromDate, $toDate) {
+            $query->whereBetween('created_at', [$fromDate, $toDate]);
+        });
     }
 
-    // Kung gusto mong i-filter ang farmers batay sa affiliation (barangay)
-    if ($request->has('barangay')) {
+    // If barangay filter is provided, filter by affiliation's barangay
+    if ($request->has('barangay') && $request->barangay != '') {
         $farmers->whereHas('affiliation', function($query) use ($request) {
             $query->where('name_of_barangay', $request->barangay);
         });
@@ -49,28 +51,41 @@ class HVCDPController extends Controller
     // Filter para sa mga farmers na may data o walang data
     if ($request->has('inputted_data')) {
         if (in_array('yes', $request->input('inputted_data'))) {
+            // Mga farmers na may inventory
             $farmers->whereHas('inventoryValuedCrops');
         }
         if (in_array('no', $request->input('inputted_data'))) {
+            // Mga farmers na walang inventory
             $farmers->doesntHave('inventoryValuedCrops');
         }
     }
 
-    // Kunin ang mga farmers
+    // Kunin ang mga farmers na nakapasa sa mga filter
     $farmers = $farmers->get();
 
-    // Kunin ang lahat ng affiliations
-    $affiliations = Affiliation::all();
+    // Kunin ang mga barangay mula sa affiliation at walang affiliation
+    $affiliationsWithBarangay = Affiliation::whereNotNull('name_of_barangay')
+        ->distinct()->pluck('name_of_barangay');
 
-    // Kunin ang mga unique plants
+    // Kunin ang mga barangay na walang affiliation (null na barangay)
+    $affiliationsWithoutBarangay = Affiliation::whereNull('name_of_barangay')
+        ->distinct()->pluck('name_of_barangay');
+
+    // Pagsamahin ang dalawang koleksyon at alisin ang mga duplicates
+    $allBarangays = $affiliationsWithBarangay->merge($affiliationsWithoutBarangay)->unique();
+
+    // Kunin ang mga unique plants mula sa inventory ng farmers
     $uniquePlants = $farmers->flatMap(function($farmer) {
         return $farmer->inventoryValuedCrops->pluck('plant.name_of_plants');
     })->unique();
 
-    return view('Admin.hvcdp.index', compact('affiliations', 'farmers', 'uniquePlants'), [
+    // Ibalik ang view kasama ang mga filter at data
+    return view('Admin.hvcdp.index', compact('allBarangays', 'farmers', 'uniquePlants'), [
         'title' => 'HVCDP - Records'
     ]);
 }
+
+
 
     
 
@@ -263,11 +278,14 @@ private function extractCoordinatesFromText($ocrText)
     // Start query for farmers with inventory data and affiliations
     $farmers = Farmer::with(['inventoryValuedCrops.plant', 'affiliation'])->newQuery();
 
-    // Apply date filters if provided
+    // Apply date filters to the inventory_valued_crops' created_at field
     if ($request->filled(['from_date', 'to_date'])) {
-        $fromDate = $request->from_date . ' 00:00:00'; // Start of the day
-        $toDate = $request->to_date . ' 23:59:59'; // End of the day
-        $farmers->whereBetween('created_at', [$fromDate, $toDate]);
+        $fromDate = \Carbon\Carbon::parse($request->from_date)->startOfDay();
+        $toDate = \Carbon\Carbon::parse($request->to_date)->endOfDay();
+
+        $farmers->whereHas('inventoryValuedCrops', function ($query) use ($fromDate, $toDate) {
+            $query->whereBetween('created_at', [$fromDate, $toDate]);
+        });
     }
 
     // Apply barangay filter if provided
@@ -287,8 +305,13 @@ private function extractCoordinatesFromText($ocrText)
         $farmers->whereDoesntHave('inventoryValuedCrops');
     }
 
-    // Retrieve filtered farmers
-    $farmers = $farmers->get();
+    // Retrieve the farmers with their most recent inventory data
+    $farmers = $farmers->get()->map(function ($farmer) {
+        // Get the latest inventory entry for each farmer
+        $latestInventory = $farmer->inventoryValuedCrops()->latest('created_at')->first();
+        $farmer->latest_inventory = $latestInventory; // Add the latest inventory to the farmer object
+        return $farmer;
+    });
 
     // Get unique plants from the filtered farmers' inventory
     $uniquePlants = $farmers->flatMap(function($farmer) {

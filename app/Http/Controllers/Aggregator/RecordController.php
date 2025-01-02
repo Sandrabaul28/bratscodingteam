@@ -32,11 +32,15 @@ class RecordController extends Controller
     $farmers = Farmer::with('inventoryValuedCrops.plant')->newQuery();
 
     // Filter by date if provided
-    if ($request->filled(['from_date', 'to_date'])) {
-        $fromDate = $request->from_date . ' 00:00:00';
-        $toDate = $request->to_date . ' 23:59:59';
-        $farmers->whereBetween('created_at', [$fromDate, $toDate]);
+        if ($request->has('from_date') && $request->has('to_date')) {
+        $fromDate = \Carbon\Carbon::parse($request->from_date)->startOfDay();
+        $toDate = \Carbon\Carbon::parse($request->to_date)->endOfDay();
+
+        $farmers->whereHas('inventoryValuedCrops', function ($query) use ($fromDate, $toDate) {
+            $query->whereBetween('created_at', [$fromDate, $toDate]);
+        });
     }
+
 
     // Filter by barangay if provided
     if ($request->filled('barangay')) {

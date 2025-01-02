@@ -15,6 +15,7 @@
                    <i class="fa fa-print mr-2" aria-hidden="true"></i><span>Print</span>
                 </a>
 
+
                 
                 <!-- Export to Excel Button -->
                 
@@ -22,33 +23,40 @@
         </div>
 
         <div class="mb-4">
-            <!-- Filter by Date Form -->
-            <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline mb-3">
-                <label for="from_date">From: </label>
-                <input type="date" name="from_date" id="from_date" class="form-control mx-2" 
-                       value="{{ request('from_date') ?? old('from_date') }}">
-                <label for="to_date">To: </label>
-                <input type="date" name="to_date" id="to_date" class="form-control mx-2" 
-                       value="{{ request('to_date') ?? old('to_date') }}">
-                <button type="submit" class="btn btn-success mx-2">Filter</button>
-                <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
-            </form>
+        <!-- Filter by Date Form -->
+        <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline mb-3">
+            <label for="from_date">From: </label>
+            <input type="date" name="from_date" id="from_date" class="form-control mx-2" 
+                   value="{{ request('from_date') }}">
+            <label for="to_date">To: </label>
+            <input type="date" name="to_date" id="to_date" class="form-control mx-2" 
+                   value="{{ request('to_date') }}">
+            <!-- Retain barangay filter value -->
+            <input type="hidden" name="barangay" value="{{ request('barangay') }}">
+            <button type="submit" class="btn btn-success mx-2">Filter</button>
+            <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
+        </form>
 
-            <!-- Filter by Barangay Form -->
-            <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline">
-                <label for="barangay">Filter by Barangay: </label>
-                <select name="barangay" id="barangay" class="form-control mx-2">
-                    <option value="">-- Select Barangay --</option>
-                    @foreach($affiliations as $affiliation)
-                        <option value="{{ $affiliation->name_of_barangay }}" 
-                            {{ request('barangay') == $affiliation->name_of_barangay ? 'selected' : '' }}>
-                            {{ $affiliation->name_of_barangay }} - {{ $affiliation->name_of_association }}
-                        </option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-success mx-2">Filter</button>
-                <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
-            </form>
+        <!-- Filter by Barangay Form -->
+        <form action="{{ route('admin.hvcdp.index') }}" method="GET" class="form-inline">
+            <label for="barangay">Filter by Barangay: </label>
+            <select name="barangay" id="barangay" class="form-control mx-2">
+                <option value="">-- Select Barangay --</option>
+                @foreach($allBarangays as $barangay)
+                    <option value="{{ $barangay }}" 
+                        {{ request('barangay') == $barangay ? 'selected' : '' }}>
+                        {{ $barangay }}
+                    </option>
+                @endforeach
+            </select>
+            <!-- Retain date filter values -->
+            <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+            <input type="hidden" name="to_date" value="{{ request('to_date') }}">
+            <button type="submit" class="btn btn-success mx-2">Filter</button>
+            <a href="{{ route('admin.hvcdp.index') }}" class="btn btn-secondary mx-2">Reset</a>
+        </form>
+
+
             <br>
 
             <!-- Filter by Inputted Data Form -->

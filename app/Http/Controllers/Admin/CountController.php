@@ -32,10 +32,10 @@ class CountController extends Controller
             'plants.name_of_plants',
             'inventory_valued_crops.latitude',
             'inventory_valued_crops.longitude',
-            'inventory_valued_crops.created_at', // Include the created_at column
-            'users.first_name as added_by_first_name', // Get the encoder's first name
-            'users.last_name as added_by_last_name',   // Get the encoder's last name
-            'roles.role_name'                         // Get the role name of the encoder
+            'inventory_valued_crops.created_at', 
+            'users.first_name as added_by_first_name', 
+            'users.last_name as added_by_last_name',  
+            'roles.role_name'                         
         )
         ->get();
 

@@ -15,8 +15,6 @@
                    <i class="fa fa-print mr-2" aria-hidden="true"></i><span>Print</span>
                 </a>
 
-
-                
                 <!-- Export to Excel Button -->
                 
             </div>

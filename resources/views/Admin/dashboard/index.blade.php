@@ -145,6 +145,8 @@
 
 <!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 <script>
     // Pie Chart for Plant Distribution
     const plantsData = @json($plantsData);
@@ -153,6 +155,7 @@
     const totalPlants = plantsData.map(item => item.total_plants);
     const totalFarmers = plantsData.map(item => item.total_farmers);
     const totalBarangays = plantsData.map(item => item.total_barangays);
+    const totalSum = totalPlants.reduce((a, b) => a + b, 0); // Total ng lahat ng halaman
 
     const ctx = document.getElementById('plantsPieChart').getContext('2d');
     const plantsPieChart = new Chart(ctx, {
@@ -169,20 +172,35 @@
                     '#B22222', '#008080', '#F08080', '#D2691E', '#DC143C', '#FF8C00',
                     '#6A5ACD', '#98FB98', '#F0E68C', '#DAA520', '#8B0000', '#7B68EE',
                     '#FFB6C1', '#20B2AA', '#228B22', '#ADFF2F', '#D3D3D3', '#A52A2A',
-                    '#800080', '#9B30FF'],
+                    '#800080', '#9B30FF'
+                ],
                 hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
             plugins: {
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: (value, ctx) => {
+                        let percentage = ((value / totalSum) * 100).toFixed(2);
+                        return `${value} (${percentage}%)`; // ✅ Ipakita ang numerical value at percentage
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(tooltipItem) {
-                            const plant = totalPlants[tooltipItem.dataIndex];
-                            const farmers = totalFarmers[tooltipItem.dataIndex];
-                            const barangays = totalBarangays[tooltipItem.dataIndex];
-                            return `Plant: ${plant}\n \nFarmer: ${farmers}\nBarangay: ${barangays}`;
+                            const index = tooltipItem.dataIndex;
+                            const plant = totalPlants[index];
+                            const farmers = totalFarmers[index];
+                            const barangays = totalBarangays[index];
+                            const percentage = ((plant / totalSum) * 100).toFixed(2); // Kinukuha ang percentage
+
+                            return `Plant: ${plant} (${percentage}%)\nFarmer: ${farmers}\nBarangay: ${barangays}`;
                         }
                     }
                 },
@@ -193,7 +211,8 @@
                     }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels] // Dapat idagdag ito para gumana ang datalabels
     });
 
     // Bar Chart for Monthly Data Overview

@@ -69,7 +69,7 @@ class MonthlyRecordsExport implements FromView, WithHeadings, WithStyles
         });
 
         // Ibalik ang view na may data na variable
-        return view('admin.inventory.monthly_inventory', ['data' => $data]);
+        return view('Admin.inventory.monthly_inventory', ['data' => $data]);//a to A
     }
 
     public function headings(): array

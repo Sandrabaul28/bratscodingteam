@@ -129,7 +129,7 @@
 
                                 <!-- Plant Selection -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="plant_name">Commodity <span style="color: red;">*</span></label>
+                                    <label for="plant_name">Commodity</span></label>
                                     <input list="plant_list" id="plant_name" name="plant_name" class="form-control @error('plant_name') is-invalid @enderror" required placeholder="Select Commodity">
                                     <datalist id="plant_list">
                                         @foreach($plants as $plant)
@@ -144,7 +144,7 @@
 
                                 <!-- Affiliation Selection -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="affiliation_name">Affiliation <span style="color: red;">*</span></label>
+                                    <label for="affiliation_name">Affiliation</label>
                                     <input list="affiliation_list" id="affiliation_name" name="affiliation_name" class="form-control @error('affiliation_name') is-invalid @enderror" required placeholder="Select Affiliation">
                                     <datalist id="affiliation_list">
                                         @foreach($affiliations as $affiliation)
@@ -197,7 +197,7 @@
 
 
                                 <div class="col-md-2 mb-3">
-                                    <label for="planting_density">Planting Density(ha) <span style="color: red;">*</span></label>
+                                    <label for="planting_density">Planting Density(ha)</label>
                                     <input type="number" name="planting_density" class="form-control @error('planting_density') is-invalid @enderror" required onchange="calculateAreaHarvested(this)">
                                     @error('planting_density')
                                         <span class="invalid-feedback">{{ $message }}</span>

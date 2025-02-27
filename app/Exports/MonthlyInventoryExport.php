@@ -70,7 +70,7 @@ class MonthlyInventoryExport implements FromView, WithHeadings, WithStyles
         });
 
         // Return the view with the data variable
-        return view('admin.inventory.monthly_inventory', ['data' => $data]);
+        return view('Admin.inventory.monthly_inventory', ['data' => $data]);
     }
 
     public function headings(): array

@@ -135,5 +135,29 @@ class DashboardController extends Controller
         return response()->download($tempFilePath, $filename)->deleteFileAfterSend(true);
     }
 
+    public function map()
+    {
+        $locations = DB::table('inventory_valued_crops')
+            ->join('farmers', 'inventory_valued_crops.farmer_id', '=', 'farmers.id')
+            ->join('plants', 'inventory_valued_crops.plant_id', '=', 'plants.id')
+            ->select(
+                'plants.name_of_plants',
+                'farmers.first_name',
+                'farmers.last_name',
+                'inventory_valued_crops.latitude',
+                'inventory_valued_crops.longitude',
+                'inventory_valued_crops.image_path'
+            )
+            ->whereNotNull('inventory_valued_crops.latitude')
+            ->whereNotNull('inventory_valued_crops.longitude')
+            ->where('inventory_valued_crops.latitude', '!=', 0)
+            ->where('inventory_valued_crops.longitude', '!=', 0)
+            ->get();
+            
+        return view('Admin.map.map', compact('locations'),[
+            'title' => 'Admin | Map View'
+        ]);
+    }
+
 }
 

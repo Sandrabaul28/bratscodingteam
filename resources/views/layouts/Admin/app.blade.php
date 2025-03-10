@@ -21,7 +21,10 @@
 
      <!-- Include Bootstrap CSS if needed -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    
+
+    <!-- para nis guide tour -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@8.0.0/dist/css/shepherd.css">
+
     <style>
         body {
             overflow: hidden; /* Para hindi mag-scroll ang buong body */
@@ -79,59 +82,80 @@
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
+                    aria-expanded="true" aria-controls="collapseTwo" data-toggle="tooltip" title="Manage crop inventory">
                     <i class="fas fa-fw fa-folder"></i>
                     <span>Inventory</span>
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">HVCDP Section:</h6>
-                        <a class="collapse-item" href="{{ route('admin.count.count')}}">Crop Data Count</a>
-                        <a class="collapse-item" href="{{ route('admin.hvcdp.index')}}">Crop Data Records</a>
-                        <a class="collapse-item" href="{{ route('admin.inventory.index')}}">Monthly Encoding</a>
-                        <a class="collapse-item" href="{{ route('admin.inventory.history') }}">Monthly Records</a>
+                        <a class="collapse-item" href="{{ route('admin.count.count')}}" data-toggle="tooltip" title="Magdagdag ng bilang ng tanim at anong tanim ang meron sila">Crop Data Count</a>
+                        <a class="collapse-item" href="{{ route('admin.hvcdp.index')}}" data-toggle="tooltip" title="Makikita ang lahat ng may records o wala">Crop Data Records</a>
+                        <a class="collapse-item" href="{{ route('admin.inventory.index')}}" data-toggle="tooltip" title="Gumawa ng Monthly Report">Monthly Encoding</a>
+                        <a class="collapse-item" href="{{ route('admin.inventory.history') }}" data-toggle="tooltip" title="Makikita ang mga records at changes mula sa Monthly Encoding">Monthly Records</a>
                     </div>
                 </div>
             </li>
 
-            <!-- Nav Item - Utilities Collapse Menu -->
+            <!-- Nav Item - Account Management -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
+                    aria-expanded="true" aria-controls="collapseUtilities" data-toggle="tooltip" title="Manage user accounts">
                     <i class="fas fa-fw fa-wrench"></i>
                     <span>Account Management</span>
                 </a>
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <!-- <h6 class="collapse-header">Lists:</h6> -->
-                              <a class="collapse-item" href="{{ route('admin.roles.createUser')}}">Admin User Management</a>
-                              <a class="collapse-item" href="{{ route('admin.farmers.create') }}"> Farmer Records</a>
-                              <!-- <a class="collapse-item" href=""></a> -->
-
+                        <a class="collapse-item" href="{{ route('admin.roles.createUser')}}" data-toggle="tooltip" title="Ang admin ay maaaring magdagdag ng Aggregator users">Admin User Management</a>
+                        <a class="collapse-item" href="{{ route('admin.farmers.create') }}" data-toggle="tooltip" title="agdagdag ng Farmers na may account">Farmer Records</a>
                     </div>
                 </div>
             </li>
+
             <!-- Divider -->
             <hr class="sidebar-divider">
+
             <!-- Heading -->
             <div class="sidebar-heading">
-                CROPS
+                Database
             </div>
 
-            <!-- Nav Item - Charts -->
+            <!-- Nav Item - Crops -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.plants.index')}}">
+                <a class="nav-link" href="{{ route('admin.plants.index')}}" data-toggle="tooltip" title="Magdagdag ng bagong tanim, kung wala pa sa database">
                     <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Plant Database</span></a>
+                    <span>Plant Database</span>
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.affiliations.index')}}">
+                <a class="nav-link" href="{{ route('admin.affiliations.index')}}" data-toggle="tooltip" title="Magdagdag ng bagong barangay o taong may sinalihang association">
                     <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Affiliation Directory</span></a>
+                    <span>Affiliation Directory</span>
+                </a>
             </li>
             <!-- Divider -->
-            <hr class="sidebar-divider d-none d-md-block">
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Location
+            </div>
+            <!-- Nav Item - Location -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.map') }}" data-toggle="tooltip" title="Tingnan ang mapa ng lokasyon">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Map View</span>
+                </a>
+            </li>
+
+            <!-- Activate Bootstrap Tooltip -->
+            <script>
+                $(document).ready(function () {
+                    $('[data-toggle="tooltip"]').tooltip(); // Enable tooltip
+                });
+            </script>
+
 
             <!-- Sidebar Toggler (Sidebar) -->
             <div class="text-center d-none d-md-inline">
@@ -278,6 +302,8 @@
         </div>
     </div>
 
+    <!-- Shepherd.js JS -->
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@8.0.0/dist/js/shepherd.min.js"></script>
 
     <!-- Bootstrap core JavaScript-->
     <script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>

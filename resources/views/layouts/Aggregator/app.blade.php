@@ -77,15 +77,15 @@
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
+                    aria-expanded="true" aria-controls="collapseTwo" data-toggle="tooltip" title="Manage crop inventory and reports">
                     <i class="fas fa-fw fa-folder"></i>
                     <span>Inventory</span>
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">HVCDP Section:</h6>
-                        <a class="collapse-item" href="{{ route('aggregator.count.count')}}">Crop Data Counts</a>
-                        <a class="collapse-item" href="{{ route('aggregator.hvcdp.index')}}">Crop Data Records</a>
+                        <a class="collapse-item" href="{{ route('aggregator.count.count')}}" data-toggle="tooltip" title="Magdagdag ng bilang ng tanim at anong tanim ang meron sila">Crop Data Counts</a>
+                        <a class="collapse-item" href="{{ route('aggregator.hvcdp.index')}}" data-toggle="tooltip" title="Makikita ang lahat ng may records o wala">Crop Data Records</a>
                     </div>
                 </div>
             </li>
@@ -93,18 +93,18 @@
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
+                    aria-expanded="true" aria-controls="collapseUtilities" data-toggle="tooltip" title="Manage user accounts and farmer records">
                     <i class="fas fa-fw fa-wrench"></i>
                     <span>Account Management</span>
                 </a>
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                              <a class="collapse-item" href="{{ route('aggregator.farmers.create') }}">Farmer Records</a>
-
+                        <a class="collapse-item" href="{{ route('aggregator.farmers.create') }}" data-toggle="tooltip" title="Magdagdag ng Farmers na may account">Farmer Records</a>
                     </div>
                 </div>
             </li>       
+
             <!-- Divider -->
             <hr class="sidebar-divider">
 
@@ -112,19 +112,29 @@
             <div class="sidebar-heading">
                 Addons
             </div>
+
             <!-- Nav Item - Charts -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('aggregator.plants.index')}}">
+                <a class="nav-link" href="{{ route('aggregator.plants.index')}}" data-toggle="tooltip" title="Magdagdag ng bagong tanim, kung wala pa sa database">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Plant Database</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('affiliations.index')}}">
+                <a class="nav-link" href="{{ route('affiliations.index')}}" data-toggle="tooltip" title="Magdagdag ng bagong barangay o taong may sinalihang association">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Affiliation Directory</span></a>
             </li>
+
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Activate Bootstrap Tooltip -->
+            <script>
+                $(document).ready(function () {
+                    $('[data-toggle="tooltip"]').tooltip(); // Enable tooltip
+                });
+            </script>
+
 
             <!-- Sidebar Toggler (Sidebar) -->
             <div class="text-center d-none d-md-inline">

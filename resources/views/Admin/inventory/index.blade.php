@@ -118,7 +118,12 @@
                                     <input list="farmer_list" id="farmer_name" name="farmer_name" class="form-control @error('farmer_name') is-invalid @enderror" required placeholder="Select Farmer">
                                     <datalist id="farmer_list">
                                         @foreach($farmers as $farmer)
-                                            <option value="{{ $farmer->first_name }} {{ $farmer->last_name }}" data-id="{{ $farmer->id }}"></option>
+                                            <option 
+                                                value="{{ $farmer->first_name }} {{ $farmer->last_name }}"
+                                                data-id="{{ $farmer->id }}"
+                                                data-affiliation-id="{{ $farmer->affiliation->id ?? '' }}"
+                                                data-affiliation-name="{{ $farmer->affiliation->name_of_barangay ?? '' }} - {{ $farmer->affiliation->name_of_association ?? '' }}">
+                                            </option>
                                         @endforeach
                                     </datalist>
                                     <input type="hidden" name="farmer_id" id="farmer_id">
@@ -129,7 +134,7 @@
 
                                 <!-- Plant Selection -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="plant_name">Commodity</span></label>
+                                    <label for="plant_name">Commodity <span style="color: red;">*</span></label>
                                     <input list="plant_list" id="plant_name" name="plant_name" class="form-control @error('plant_name') is-invalid @enderror" required placeholder="Select Commodity">
                                     <datalist id="plant_list">
                                         @foreach($plants as $plant)
@@ -142,22 +147,19 @@
                                     @enderror
                                 </div>
 
-                                <!-- Affiliation Selection -->
+                                <!-- Affiliation Selection (Auto-filled) -->
                                 <div class="col-md-4 mb-3">
                                     <label for="affiliation_name">Affiliation</label>
-                                    <input list="affiliation_list" id="affiliation_name" name="affiliation_name" class="form-control @error('affiliation_name') is-invalid @enderror" required placeholder="Select Affiliation">
-                                    <datalist id="affiliation_list">
-                                        @foreach($affiliations as $affiliation)
-                                            <option value="{{ $affiliation->name_of_barangay}} - {{ $affiliation->name_of_association }} " data-id="{{ $affiliation->id }}"></option>
-                                        @endforeach
-                                    </datalist>
+                                    <input type="text" id="affiliation_name" name="affiliation_name" class="form-control @error('affiliation_name') is-invalid @enderror" readonly placeholder="Affiliation will be auto-filled">
                                     <input type="hidden" name="affiliation_id" id="affiliation_id">
                                     @error('affiliation_id')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
-                                <script >
-                                    document.addEventListener('DOMContentLoaded', function() {
+
+                                <!-- Script to Auto-Fill IDs and Affiliation -->
+                                <script>
+                                document.addEventListener('DOMContentLoaded', function () {
                                     const farmerInput = document.getElementById('farmer_name');
                                     const farmerIdField = document.getElementById('farmer_id');
                                     const plantInput = document.getElementById('plant_name');
@@ -165,16 +167,23 @@
                                     const affiliationInput = document.getElementById('affiliation_name');
                                     const affiliationIdField = document.getElementById('affiliation_id');
 
-                                    farmerInput.addEventListener('input', function() {
+                                    farmerInput.addEventListener('input', function () {
                                         const selectedFarmer = Array.from(document.querySelectorAll('#farmer_list option')).find(option => option.value === farmerInput.value);
                                         if (selectedFarmer) {
                                             farmerIdField.value = selectedFarmer.getAttribute('data-id');
+                                            const affId = selectedFarmer.getAttribute('data-affiliation-id');
+                                            const affName = selectedFarmer.getAttribute('data-affiliation-name');
+                                            
+                                            affiliationInput.value = affName;
+                                            affiliationIdField.value = affId;
                                         } else {
                                             farmerIdField.value = '';
+                                            affiliationInput.value = '';
+                                            affiliationIdField.value = '';
                                         }
                                     });
 
-                                    plantInput.addEventListener('input', function() {
+                                    plantInput.addEventListener('input', function () {
                                         const selectedPlant = Array.from(document.querySelectorAll('#plant_list option')).find(option => option.value === plantInput.value);
                                         if (selectedPlant) {
                                             plantIdField.value = selectedPlant.getAttribute('data-id');
@@ -182,22 +191,13 @@
                                             plantIdField.value = '';
                                         }
                                     });
-
-                                    affiliationInput.addEventListener('input', function() {
-                                        const selectedAffiliation = Array.from(document.querySelectorAll('#affiliation_list option')).find(option => option.value === affiliationInput.value);
-                                        if (selectedAffiliation) {
-                                            affiliationIdField.value = selectedAffiliation.getAttribute('data-id');
-                                        } else {
-                                            affiliationIdField.value = '';
-                                        }
-                                    });
                                 });
-
                                 </script>
 
 
+
                                 <div class="col-md-2 mb-3">
-                                    <label for="planting_density">Planting Density(ha)</label>
+                                    <label for="planting_density">Planting Density(ha)<span style="color: red;">*</span></label>
                                     <input type="number" name="planting_density" class="form-control @error('planting_density') is-invalid @enderror" required onchange="calculateAreaHarvested(this)">
                                     @error('planting_density')
                                         <span class="invalid-feedback">{{ $message }}</span>

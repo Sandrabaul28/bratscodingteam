@@ -44,5 +44,8 @@ class InventoryValuedCrop extends Model
         return $this->hasOne(InventoryValuedCrop::class, 'farmer_id');
     }
 
-
+    public function monthlyInventories()
+    {
+        return $this->hasMany(MonthlyInventory::class, 'inventory_value_crops_id');
+    }
 }

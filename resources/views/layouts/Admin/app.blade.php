@@ -57,7 +57,7 @@
                 <div class="sidebar-brand-icon" style="display: flex; align-items: center; justify-content: center;">
                     <img src="{{ asset('assets/img/LOGO2.png') }}" alt="logo" style="width: 50px; height: 50px; border-radius: 50%;">
                 </div>
-                <div class="sidebar-brand-text" style="margin: 1px;">BONTOC CROPS</div>
+                <div class="sidebar-brand-text" style="margin: 1px;">BONTOC CROPS</div> 
             </a>
 
 
@@ -69,6 +69,7 @@
                 <a class="nav-link" href=" {{ route('admin.dashboard')}} ">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span></a>
+                    
             </li>
 
             <!-- Divider -->

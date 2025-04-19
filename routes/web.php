@@ -168,7 +168,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         
 
     });
-
+        Route::get('/admin/map/exportCsv', [DashboardController::class, 'exportCsv'])->name('admin.map.exportCsv');
+    
     
     
 });

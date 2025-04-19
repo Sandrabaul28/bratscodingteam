@@ -155,7 +155,6 @@
     const totalPlants = plantsData.map(item => item.total_plants);
     const totalFarmers = plantsData.map(item => item.total_farmers);
     const totalBarangays = plantsData.map(item => item.total_barangays);
-    const totalSum = totalPlants.reduce((a, b) => a + b, 0); // Total ng lahat ng halaman
 
     const ctx = document.getElementById('plantsPieChart').getContext('2d');
     const plantsPieChart = new Chart(ctx, {
@@ -187,20 +186,20 @@
                         size: 14
                     },
                     formatter: (value, ctx) => {
-                        let percentage = ((value / totalSum) * 100).toFixed(2);
-                        return `${value} (${percentage}%)`; // ✅ Ipakita ang numerical value at percentage
+                        const plantName = ctx.chart.data.labels[ctx.dataIndex];
+                        return `${plantName}: ${value}`;
                     }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(tooltipItem) {
                             const index = tooltipItem.dataIndex;
+                            const plantName = labels[index];
                             const plant = totalPlants[index];
                             const farmers = totalFarmers[index];
                             const barangays = totalBarangays[index];
-                            const percentage = ((plant / totalSum) * 100).toFixed(2); // Kinukuha ang percentage
 
-                            return `Plant: ${plant} (${percentage}%)\nFarmer: ${farmers}\nBarangay: ${barangays}`;
+                            return `Plant: ${plantName}\nTotal: ${plant}\nFarmers: ${farmers}\nBarangays: ${barangays}`;
                         }
                     }
                 },
@@ -212,7 +211,7 @@
                 }
             }
         },
-        plugins: [ChartDataLabels] // Dapat idagdag ito para gumana ang datalabels
+        plugins: [ChartDataLabels]
     });
 
     // Bar Chart for Monthly Data Overview

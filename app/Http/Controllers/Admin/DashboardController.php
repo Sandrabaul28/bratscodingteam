@@ -13,6 +13,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Response;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MapExport;
 
 class DashboardController extends Controller
 { 
@@ -135,29 +139,52 @@ class DashboardController extends Controller
         return response()->download($tempFilePath, $filename)->deleteFileAfterSend(true);
     }
 
-    public function map()
+    
+    public function map(Request $request)
     {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
         $locations = DB::table('inventory_valued_crops')
             ->join('farmers', 'inventory_valued_crops.farmer_id', '=', 'farmers.id')
             ->join('plants', 'inventory_valued_crops.plant_id', '=', 'plants.id')
-            ->select(
-                'plants.name_of_plants',
-                'farmers.first_name',
-                'farmers.last_name',
-                'inventory_valued_crops.latitude',
-                'inventory_valued_crops.longitude',
-                'inventory_valued_crops.image_path'
-            )
-            ->whereNotNull('inventory_valued_crops.latitude')
-            ->whereNotNull('inventory_valued_crops.longitude')
-            ->where('inventory_valued_crops.latitude', '!=', 0)
-            ->where('inventory_valued_crops.longitude', '!=', 0)
+            ->leftJoin('affiliations', 'farmers.affiliation_id', '=', 'affiliations.id')
+            ->leftJoin('monthly_inventories', function($join) {
+                $join->on('monthly_inventories.farmer_id', '=', 'farmers.id')
+                     ->on('monthly_inventories.plant_id', '=', 'inventory_valued_crops.plant_id');
+            })
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                // Parse the start and end date with Carbon and ensure it's compared correctly
+                return $query->whereBetween('monthly_inventories.created_at', [
+                    Carbon::parse($startDate)->startOfDay(), 
+                    Carbon::parse($endDate)->endOfDay()
+                ]);
+            })
             ->get();
-            
-        return view('Admin.map.map', compact('locations'),[
-            'title' => 'Admin | Map View'
+
+        // Optionally, format the dates before passing them to the view
+        $locations = $locations->map(function ($location) {
+            $location->formatted_date = Carbon::parse($location->created_at)->toDateString();
+            return $location;
+        });
+
+        return view('Admin.map.map', compact('locations'), [
+            'title' => 'Admin | Extract'
         ]);
     }
 
+
+    public function exportCsv(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        return Excel::download(new MapExport($startDate, $endDate), 'map_data.csv');
+    }
+    
+    
 }
+
+
+
 

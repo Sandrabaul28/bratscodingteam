@@ -75,4 +75,5 @@ class Farmer extends Model
     return $this->hasMany(MonthlyRecord::class);
     }
 
+    
 }

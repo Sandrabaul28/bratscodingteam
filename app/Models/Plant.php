@@ -34,4 +34,5 @@ class Plant extends Model
     return $this->hasMany(MonthlyRecord::class);
     }
     
+    
 }

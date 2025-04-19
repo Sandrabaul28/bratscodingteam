@@ -36,4 +36,5 @@ class Affiliation extends Model
     return $this->hasMany(MonthlyRecord::class);
     }
 
+    
 }

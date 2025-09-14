@@ -69,8 +69,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         
     });
 
-    Route::resource('admin/affiliations', AffiliationController::class);
-
     // Affiliation management
     Route::prefix('affiliations')->name('admin.affiliations.')->group(function() {
         Route::get('/', [AffiliationController::class, 'index'])->name('index');
@@ -121,7 +119,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
 
         Route::get('/print', [HVCDPController::class, 'print'])->name('print');
         Route::get('/export-excel', [HVCDPController::class, 'exportBarangay'])->name('exportExcel');
-        Route::post('extract-text', [YourController::class, 'extractTextFromImage']);
+        Route::post('extract-text', [HVCDPController::class, 'extractTextFromImage']);
 
 
 
@@ -166,6 +164,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         Route::get('previewHistory/{month}/{year}', [MonthlyInventoryController::class, 'previewHistory'])->name('previewHistory');
         Route::get('exportHistory/{month}/{year}', [MonthlyInventoryController::class, 'exportHistory'])->name('exportHistory');
         
+        // Excel upload functionality
+        Route::post('/upload-excel', [MonthlyInventoryController::class, 'uploadExcel'])->name('uploadExcel');
 
     });
         Route::get('/admin/map/exportCsv', [DashboardController::class, 'exportCsv'])->name('admin.map.exportCsv');

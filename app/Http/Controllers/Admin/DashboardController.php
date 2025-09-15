@@ -153,18 +153,35 @@ class DashboardController extends Controller
                 $join->on('monthly_inventories.farmer_id', '=', 'farmers.id')
                      ->on('monthly_inventories.plant_id', '=', 'inventory_valued_crops.plant_id');
             })
+            ->select(
+                'inventory_valued_crops.*',
+                'farmers.first_name',
+                'farmers.middle_name', 
+                'farmers.last_name',
+                'plants.name_of_plants',
+                'affiliations.name_of_barangay',
+                'affiliations.name_of_association',
+                'monthly_inventories.total',
+                'monthly_inventories.total_planted_area',
+                'monthly_inventories.created_at'
+            )
             ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                // Parse the start and end date with Carbon and ensure it's compared correctly
                 return $query->whereBetween('monthly_inventories.created_at', [
                     Carbon::parse($startDate)->startOfDay(), 
                     Carbon::parse($endDate)->endOfDay()
                 ]);
             })
+            ->whereNotNull('inventory_valued_crops.latitude')
+            ->whereNotNull('inventory_valued_crops.longitude')
+            ->where('inventory_valued_crops.latitude', '!=', 0)
+            ->where('inventory_valued_crops.longitude', '!=', 0)
+            ->orderBy('inventory_valued_crops.created_at', 'desc')
             ->get();
 
-        // Optionally, format the dates before passing them to the view
+        // Format the data for better map display
         $locations = $locations->map(function ($location) {
             $location->formatted_date = Carbon::parse($location->created_at)->toDateString();
+            $location->full_name = trim($location->first_name . ' ' . $location->middle_name . ' ' . $location->last_name);
             return $location;
         });
 

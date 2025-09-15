@@ -2239,6 +2239,7 @@
         },
         {
             "name": "maatwebsite/excel",
+<<<<<<< HEAD
             "version": "3.1.61",
             "source": {
                 "type": "git",
@@ -2249,6 +2250,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/SpartnerNL/Laravel-Excel/zipball/62616317c5ec07e885c5d7f6b537f57a7239c2ff",
                 "reference": "62616317c5ec07e885c5d7f6b537f57a7239c2ff",
+=======
+            "version": "3.1.59",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SpartnerNL/Laravel-Excel.git",
+                "reference": "b4d8b877e31998811700283d91292ab2b9a4970d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SpartnerNL/Laravel-Excel/zipball/b4d8b877e31998811700283d91292ab2b9a4970d",
+                "reference": "b4d8b877e31998811700283d91292ab2b9a4970d",
+>>>>>>> refs/remotes/origin/master
                 "shasum": ""
             },
             "require": {
@@ -2256,7 +2269,11 @@
                 "ext-json": "*",
                 "illuminate/support": "5.8.*||^6.0||^7.0||^8.0||^9.0||^10.0||^11.0",
                 "php": "^7.0||^8.0",
+<<<<<<< HEAD
                 "phpoffice/phpspreadsheet": "^1.29.4",
+=======
+                "phpoffice/phpspreadsheet": "^1.29.2",
+>>>>>>> refs/remotes/origin/master
                 "psr/simple-cache": "^1.0||^2.0||^3.0"
             },
             "require-dev": {
@@ -2267,12 +2284,12 @@
             "type": "library",
             "extra": {
                 "laravel": {
-                    "providers": [
-                        "Maatwebsite\\Excel\\ExcelServiceProvider"
-                    ],
                     "aliases": {
                         "Excel": "Maatwebsite\\Excel\\Facades\\Excel"
-                    }
+                    },
+                    "providers": [
+                        "Maatwebsite\\Excel\\ExcelServiceProvider"
+                    ]
                 }
             },
             "autoload": {
@@ -2304,7 +2321,11 @@
             ],
             "support": {
                 "issues": "https://github.com/SpartnerNL/Laravel-Excel/issues",
+<<<<<<< HEAD
                 "source": "https://github.com/SpartnerNL/Laravel-Excel/tree/3.1.61"
+=======
+                "source": "https://github.com/SpartnerNL/Laravel-Excel/tree/3.1.59"
+>>>>>>> refs/remotes/origin/master
             },
             "funding": [
                 {
@@ -2316,7 +2337,11 @@
                     "type": "github"
                 }
             ],
+<<<<<<< HEAD
             "time": "2024-11-25T18:41:59+00:00"
+=======
+            "time": "2024-10-25T15:40:14+00:00"
+>>>>>>> refs/remotes/origin/master
         },
         {
             "name": "maennchen/zipstream-php",
@@ -8928,12 +8953,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.1"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

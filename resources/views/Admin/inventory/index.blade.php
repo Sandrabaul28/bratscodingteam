@@ -1,6 +1,26 @@
 @extends('layouts.Admin.app')
 
 @section('content')
+<style>
+    
+    .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.75em;
+    }
+    
+    #recordedCount, #uploadedCount {
+        font-weight: bold;
+        font-size: 1em;
+    }
+    
+    .count-display {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 20px;
+        padding: 0.5em 1em;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
@@ -291,10 +311,51 @@
         </div>
     </div>
 
+    <!-- Excel Upload Section -->
+    <div class="card shadow mb-4 mt-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 text-primary">
+                <span class="font-weight-bold">UPLOAD EXCEL FILE</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('admin.inventory.uploadExcel') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="excel_file">Select Excel File (.xlsx)</label>
+                            <input type="file" class="form-control @error('excel_file') is-invalid @enderror" 
+                                   id="excel_file" name="excel_file" accept=".xlsx,.xls" required>
+                            @error('excel_file')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                            <small class="form-text text-muted">
+                                Upload an Excel file with the same format as the sample. Maximum file size: 10MB.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-upload"></i> Upload Excel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <!-- Recorded inventory table -->
 <div class="card shadow mb-4 mt-4">
     <div class="card-header py-3">
-        <h6 class="m-0 text-success"><span class="font-weight-bold">RECORDED INVENTORY</span></h6>
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="m-0 text-success"><span class="font-weight-bold">RECORDED INVENTORY</span></h6>
+            </div>
+            <div class="col-md-6 text-right">
+                <span class="badge badge-primary count-display" id="recordedCount">Total Records: {{ $inventories->count() }}</span>
+            </div>
+        </div>
         <br>
         <!-- Search Bar -->
         <input type="text" id="searchBar" class="form-control form-control-sm" placeholder="Search by Barangay, Association, Plant Name, Last Name, or First Name" style="max-width: 300px;" onkeyup="filterInventoryTable()">
@@ -305,6 +366,7 @@
                 const query = document.getElementById("searchBar").value.toLowerCase();
                 const table = document.getElementById("recorded-inventory-table");
                 const rows = table.getElementsByTagName("tr");
+                let visibleCount = 0;
 
                 for (let i = 1; i < rows.length; i++) {
                     const barangayCell = rows[i].getElementsByTagName("td")[1];
@@ -329,16 +391,69 @@
                             firstname.includes(query)
                         ) {
                             rows[i].style.display = ""; // Show row
+                            visibleCount++;
                         } else {
                             rows[i].style.display = "none"; // Hide row
                         }
                     }
                 }
+                
+                // Update the count display
+                const totalRecords = rows.length - 1; // Subtract 1 for header row
+                const countElement = document.getElementById('recordedCount');
+                if (query === '') {
+                    countElement.textContent = `Total Records: ${totalRecords}`;
+                } else {
+                    countElement.textContent = `Showing: ${visibleCount} of ${totalRecords} records`;
+                }
             }
         </script>
     </div>
         
-   
+
+    <!-- JavaScript for Filtering Uploaded Inventory Table -->
+    <script>
+        function filterUploadedTable() {
+            const query = document.getElementById("searchUploadedBar").value.toLowerCase();
+            const table = document.getElementById("uploaded-inventory-table");
+            const rows = table.getElementsByTagName("tr");
+            let visibleCount = 0;
+
+            for (let i = 1; i < rows.length; i++) {
+                const barangayCell = rows[i].getElementsByTagName("td")[1]; // Updated index for checkbox column
+                const commodityCell = rows[i].getElementsByTagName("td")[2];
+                const farmerCell = rows[i].getElementsByTagName("td")[3];
+
+                if (barangayCell && commodityCell && farmerCell) {
+                    const barangay = barangayCell.textContent.toLowerCase();
+                    const commodity = commodityCell.textContent.toLowerCase();
+                    const farmer = farmerCell.textContent.toLowerCase();
+
+                    // Check if the query matches any of the fields
+                    if (
+                        barangay.includes(query) || 
+                        commodity.includes(query) || 
+                        farmer.includes(query)
+                    ) {
+                        rows[i].style.display = ""; // Show row
+                        visibleCount++;
+                    } else {
+                        rows[i].style.display = "none"; // Hide row
+                    }
+                }
+            }
+            
+            // Update the count display
+            const totalRecords = rows.length - 1; // Subtract 1 for header row
+            const countElement = document.getElementById('uploadedCount');
+            if (query === '') {
+                countElement.textContent = `Total Records: ${totalRecords}`;
+            } else {
+                countElement.textContent = `Showing: ${visibleCount} of ${totalRecords} records`;
+            }
+        }
+
+    </script>
 
     <div class="card-body">
         <div class="table-responsive" style="max-height: 700px; overflow-y: auto;">
@@ -614,6 +729,81 @@
         </div>
     </div>
 </div>
+
+<!-- Uploaded Inventory Data Table -->
+@if($uploadedInventories->count() > 0)
+<div class="card shadow mb-4 mt-4">
+    <div class="card-header py-3">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="m-0 text-info">
+                    <span class="font-weight-bold">UPLOADED INVENTORY DATA</span>
+                </h6>
+            </div>
+            <div class="col-md-6 text-right">
+                <span class="badge badge-info count-display" id="uploadedCount">Total Records: {{ $uploadedInventories->count() }}</span>
+            </div>
+        </div>
+        <br>
+        <!-- Search Bar for Uploaded Data -->
+        <input type="text" id="searchUploadedBar" class="form-control form-control-sm" 
+               placeholder="Search uploaded data by Barangay, Commodity, or Farmer" 
+               style="max-width: 300px;" onkeyup="filterUploadedTable()">
+    </div>
+    <div class="card-body">
+        <div class="table-responsive" style="max-height: 700px; overflow-y: auto;">
+            <table class="table table-bordered" id="uploaded-inventory-table">
+                <thead>
+                    <tr>
+                        <th style="position: sticky; top: 0; background: lightblue; z-index: 1;">Barangay</th>
+                        <th style="position: sticky; top: 0; background: lightblue; z-index: 1;">Commodity</th>
+                        <th style="position: sticky; top: 0; background: lightblue; z-index: 1;">Farmer</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Planting Density (ha)</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Production Vol/ Hectare (MT)</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Newly Planted</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Vegetative</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Reproductive</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Maturity</th>
+                        <th style="position: sticky; top: 0; background: lightgreen; z-index: 1;">Total</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Newly Planted/ha</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Vegetative/ha</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Reproductive/ha</th>
+                        <th style="position: sticky; top: 0; background: lightgray; z-index: 1;">Maturity/ha</th>
+                        <th style="position: sticky; top: 0; background: lightgreen; z-index: 1;">Total Planted Area</th>
+                        <th style="position: sticky; top: 0; background: orange; z-index: 1;">Area Harvested</th>
+                        <th style="position: sticky; top: 0; background: orange; z-index: 1;">Production Volume (MT)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($uploadedInventories as $uploaded)
+                        <tr>
+                            <td style="background: lightcyan;">{{ $uploaded->barangay }}</td>
+                            <td style="background: lightcyan;">{{ $uploaded->commodity }}</td>
+                            <td style="background: lightcyan;">{{ $uploaded->farmer }}</td>
+                            <td>{{ number_format($uploaded->planting_density) }}</td>
+                            <td>{{ number_format($uploaded->production_vol_hectare) }}</td>
+                            <td>{{ number_format($uploaded->newly_planted, 0) }}</td>
+                            <td>{{ number_format($uploaded->vegetative, 0) }}</td>
+                            <td>{{ number_format($uploaded->reproductive, 0) }}</td>
+                            <td>{{ number_format($uploaded->maturity, 0) }}</td>
+                            <td style="background: lightgreen;">{{ number_format($uploaded->total, 0) }}</td>
+                            <td>{{ number_format($uploaded->planted_area_newly, 4) }}</td>
+                            <td>{{ number_format($uploaded->planted_area_vegetative, 4) }}</td>
+                            <td>{{ number_format($uploaded->planted_area_reproductive, 4) }}</td>
+                            <td>{{ number_format($uploaded->planted_area_maturity, 4) }}</td>
+                            <td style="background: lightgreen;">{{ number_format($uploaded->planted_total, 4) }}</td>
+                            <td style="background: #ffb768;">{{ number_format($uploaded->area_harvested, 4) }}</td>
+                            <td style="background: #ffb768;">{{ number_format($uploaded->production_volume_mt, 4) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const plantingDensityInput = document.querySelector('input[name="planting_density"]');

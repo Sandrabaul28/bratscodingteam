@@ -9,6 +9,7 @@ use App\Models\MonthlyInventory;
 use App\Models\InventoryValuedCrop; 
 use App\Models\MonthlyRecord; 
 use App\Models\Plant;
+use App\Models\UploadedInventory;
 use Illuminate\Http\Request;
 use App\Exports\MonthlyInventoryExport; // Import the export class
 use App\Exports\MonthlyRecordsExport; // Import the export class
@@ -24,23 +25,18 @@ class MonthlyInventoryController extends Controller
         // Fetch all inventories along with their relationships
         $inventories = MonthlyInventory::with(['farmer', 'plant', 'affiliation'])->get();
 
+        // Fetch uploaded inventories
+        $uploadedInventories = UploadedInventory::all();
         
         // Fetch farmers, plants, and affiliations for the form
         $farmers = Farmer::all();
         $plants = Plant::all();
         $affiliations = Affiliation::all();
 
-        return view('Admin.inventory.index', compact('inventories', 'farmers', 'plants', 'affiliations'), [
+        return view('Admin.inventory.index', compact('inventories', 'uploadedInventories', 'farmers', 'plants', 'affiliations'), [
             'title' => 'Monthly Inventory'
         ]);
     }
-
-    
-
-
-
-    
-
     public function store(Request $request)
 {
     $validated = $request->validate([
@@ -131,10 +127,10 @@ class MonthlyInventoryController extends Controller
     $monthlyRecord->final_production_volume = $productionVolumeMT;
 
     if ($previousRecord) {
-        $monthlyRecord->previous_newly_planted = $previousRecord->newly_planted;
-        $monthlyRecord->previous_vegetative = $previousRecord->vegetative;
-        $monthlyRecord->previous_reproductive = $previousRecord->reproductive;
-        $monthlyRecord->previous_maturity_harvested = $previousRecord->maturity_harvested;
+        $monthlyRecord->newly_planted_divided = $previousRecord->newly_planted_divided;
+        $monthlyRecord->vegetative_divided = $previousRecord->vegetative_divided;
+        $monthlyRecord->reproductive_divided = $previousRecord->reproductive_divided;
+        $monthlyRecord->maturity_harvested_divided = $previousRecord->maturity_harvested_divided;
     }
 
     $monthlyRecord->save();
@@ -342,5 +338,120 @@ class MonthlyInventoryController extends Controller
         return Excel::download(new MonthlyRecordsExport($monthlyRecords), "MonthlyRecords_{$month}_{$year}.xlsx");
     }
     
+    public function uploadExcel(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240' // 10MB max
+        ]);
+
+        try {
+            $file = $request->file('excel_file');
+            
+            // Read the Excel file
+            $data = Excel::toArray([], $file);
+            
+            if (empty($data) || empty($data[0])) {
+                return redirect()->back()->with('error', 'The Excel file is empty or invalid.');
+            }
+
+            $rows = $data[0];
+            $headerRow = array_shift($rows); // Remove header row
+            
+            $importedCount = 0;
+            $errors = [];
+
+            foreach ($rows as $index => $row) {
+                try {
+                    // Skip empty rows
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    // Map Excel columns to database fields based on the sample structure
+                    $barangay = $row[0] ?? ''; // Column A: Barangay
+                    $commodity = $row[1] ?? ''; // Column B: Commodity
+                    $farmer = $row[2] ?? ''; // Column C: Farmer
+                    $plantingDensity = is_numeric($row[3]) ? (float)$row[3] : 0; // Column D: Planting Density (ha)
+                    $productionVolHectare = is_numeric($row[4]) ? (float)$row[4] : 0; // Column E: Production Vol/ Hectare (kls)
+                    $newlyPlanted = is_numeric($row[5]) ? (int)$row[5] : 0; // Column F: Newly Planted
+                    $vegetative = is_numeric($row[6]) ? (int)$row[6] : 0; // Column G: Vegetative
+                    $reproductive = is_numeric($row[7]) ? (int)$row[7] : 0; // Column H: Reproductive
+                    $maturity = is_numeric($row[8]) ? (int)$row[8] : 0; // Column I: Maturity/
+                    $total = is_numeric($row[9]) ? (int)$row[9] : 0; // Column J: TOTAL
+                    
+                    // Columns K-O: Per hectare values (if provided in Excel)
+                    $newlyPlantedDivided = is_numeric($row[10]) ? (float)$row[10] : 0; // Column K: Newly Planted
+                    $vegetativeDivided = is_numeric($row[11]) ? (float)$row[11] : 0; // Column L: Vegetative
+                    $reproductiveDivided = is_numeric($row[12]) ? (float)$row[12] : 0; // Column M: Reproductive
+                    $maturityDivided = is_numeric($row[13]) ? (float)$row[13] : 0; // Column N: Maturity/Harvested
+                    $totalDivided = is_numeric($row[14]) ? (float)$row[14] : 0; // Column O: Total
+                    
+                    // Columns P-Q: Area and Production Volume (if provided in Excel)
+                    $areaHarvested = is_numeric($row[15]) ? (float)$row[15] : 0; // Column P: Area
+                    $productionVolumeMt = is_numeric($row[16]) ? (float)$row[16] : 0; // Column Q: Production Volume
+                    
+                    // If per hectare values are not provided or are 0, calculate them
+                    if ($newlyPlantedDivided == 0 && $plantingDensity > 0) {
+                        $newlyPlantedDivided = $newlyPlanted / $plantingDensity;
+                    }
+                    if ($vegetativeDivided == 0 && $plantingDensity > 0) {
+                        $vegetativeDivided = $vegetative / $plantingDensity;
+                    }
+                    if ($reproductiveDivided == 0 && $plantingDensity > 0) {
+                        $reproductiveDivided = $reproductive / $plantingDensity;
+                    }
+                    if ($maturityDivided == 0 && $plantingDensity > 0) {
+                        $maturityDivided = $maturity / $plantingDensity;
+                    }
+                    
+                    // Calculate total planted area if not provided
+                    $plantedTotal = $totalDivided > 0 ? $totalDivided : ($newlyPlantedDivided + $vegetativeDivided + $reproductiveDivided + $maturityDivided);
+                    
+                    // Calculate area harvested and production volume if not provided
+                    if ($areaHarvested == 0) {
+                        $areaHarvested = $maturityDivided;
+                    }
+                    if ($productionVolumeMt == 0) {
+                        $productionVolumeMt = ($areaHarvested * $productionVolHectare) / 1000;
+                    }
+
+                    UploadedInventory::create([
+                        'barangay' => $barangay,
+                        'commodity' => $commodity,
+                        'farmer' => $farmer,
+                        'planting_density' => $plantingDensity,
+                        'production_vol_hectare' => $productionVolHectare,
+                        'newly_planted' => $newlyPlanted,
+                        'vegetative' => $vegetative,
+                        'reproductive' => $reproductive,
+                        'maturity' => $maturity,
+                        'total' => $total,
+                        'planted_area_newly' => $newlyPlantedDivided,
+                        'planted_area_vegetative' => $vegetativeDivided,
+                        'planted_area_reproductive' => $reproductiveDivided,
+                        'planted_area_maturity' => $maturityDivided,
+                        'planted_total' => $plantedTotal,
+                        'area_harvested' => $areaHarvested,
+                        'production_volume_mt' => $productionVolumeMt,
+                    ]);
+
+                    $importedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                }
+            }
+
+            $message = "Successfully imported {$importedCount} records.";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode(', ', $errors);
+            }
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error processing file: ' . $e->getMessage());
+        }
+    }
+
 
 }

@@ -117,6 +117,7 @@
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 text-success"><span class="font-weight-bold">Recorded Inventory</span></h6>
+                            
                         </div>
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <div class="card-body">

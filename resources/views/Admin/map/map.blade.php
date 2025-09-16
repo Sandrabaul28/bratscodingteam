@@ -188,6 +188,7 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
 
 <!-- Custom CSS for blinking animation and legend -->
 <style>
@@ -323,7 +324,8 @@
 
         // Tile layers
         const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+            attribution: '&copy; OpenStreetMap contributors',
+            crossOrigin: true
         });
 
         const satelliteMap = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
@@ -344,14 +346,8 @@
             "🏔 Terrain": terrainMap
         }).addTo(map);
 
-        // Initialize marker cluster group
-        markers = L.markerClusterGroup({
-            maxClusterRadius: 50,
-            disableClusteringAtZoom: 15,
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false,
-            zoomToBoundsOnClick: true
-        });
+        // Use a regular LayerGroup so individual pins stay visible at all zoom levels
+        markers = L.layerGroup();
         
         // Add zoom event listener
         map.on('zoomend', updateZoomDisplay);
@@ -731,12 +727,12 @@
     
     // Fit map bounds to show all markers
     function fitBounds() {
-        if (markers.getLayers().length === 0) {
+        if (markers.getLayers && markers.getLayers().length === 0) {
             alert('No markers to fit bounds. Please show all markers first.');
             return;
         }
         
-        const group = new L.featureGroup(markers.getLayers());
+        const group = new L.featureGroup(markers.getLayers ? markers.getLayers() : markers.getLayers);
         map.fitBounds(group.getBounds().pad(0.1));
     }
     
@@ -1011,52 +1007,80 @@
         // Map Export (screenshot)
         document.getElementById("exportMap").addEventListener("click", () => {
             try {
-                // Create a simple map export by taking a screenshot of the map container
-                const mapContainer = document.getElementById('map');
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Set canvas size to match map container
-                canvas.width = mapContainer.offsetWidth;
-                canvas.height = mapContainer.offsetHeight;
-                
-                // Create a simple map export using canvas
-                ctx.fillStyle = '#f8f9fa';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Add title
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Philippines Agricultural Map', canvas.width / 2, 40);
-                
-                // Add subtitle
-                ctx.font = '16px Arial';
-                ctx.fillStyle = '#666';
-                ctx.fillText(`Generated on ${new Date().toLocaleDateString()}`, canvas.width / 2, 70);
-                
-                // Add statistics
-                ctx.font = '14px Arial';
-                ctx.fillStyle = '#333';
-                ctx.textAlign = 'left';
-                ctx.fillText(`Total Locations: ${document.getElementById('totalValidLocations').textContent}`, 20, 100);
-                ctx.fillText(`Total Farmers: ${document.getElementById('totalFarmers').textContent}`, 20, 120);
-                ctx.fillText(`Commodity Types: ${document.getElementById('totalCommoditiesCount').textContent}`, 20, 140);
-                ctx.fillText(`Total Area: ${document.getElementById('totalArea').textContent} hectares`, 20, 160);
-                
-                // Add note
-                ctx.font = '12px Arial';
-                ctx.fillStyle = '#999';
-                ctx.textAlign = 'center';
-                ctx.fillText('For detailed interactive map, visit the web application', canvas.width / 2, canvas.height - 20);
-                
-                // Download the canvas as image
-                const link = document.createElement('a');
-                link.download = `philippines_agricultural_map_${new Date().toISOString().split('T')[0]}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                
-                alert('Map exported successfully! Note: This is a summary image. For full interactive map, use the web application.');
+                // Force a CORS-friendly base layer for export
+                const wasStreet = map.hasLayer(streetMap);
+                const wasSat = map.hasLayer(satelliteMap);
+                const wasTer = map.hasLayer(terrainMap);
+
+                if (!wasStreet) {
+                    map.addLayer(streetMap);
+                }
+                if (wasSat) map.removeLayer(satelliteMap);
+                if (wasTer) map.removeLayer(terrainMap);
+
+                const render = () => {
+                    leafletImage(map, function(err, mapCanvas) {
+                        // Restore previous base layer after rendering
+                        if (!wasStreet) map.removeLayer(streetMap);
+                        if (wasSat) map.addLayer(satelliteMap);
+                        if (wasTer) map.addLayer(terrainMap);
+
+                        if (err || !mapCanvas) {
+                            console.error('leaflet-image error:', err);
+                            alert('Unable to render the map for export. Try again.');
+                            return;
+                        }
+
+                        // Compose final canvas with title and stats above the map image
+                        const paddingTop = 90; // space for header text
+                        const paddingBottom = 30; // space for footer
+                        const outCanvas = document.createElement('canvas');
+                        outCanvas.width = mapCanvas.width;
+                        outCanvas.height = mapCanvas.height + paddingTop + paddingBottom;
+                        const ctx = outCanvas.getContext('2d');
+
+                        // Background
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+
+                        // Header text
+                        ctx.fillStyle = '#000';
+                        ctx.font = 'bold 24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Philippines Agricultural Map', outCanvas.width / 2, 35);
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = '#666';
+                        ctx.fillText(`Generated on ${new Date().toLocaleDateString()}`, outCanvas.width / 2, 60);
+
+                        // Stats (left aligned)
+                        ctx.font = '14px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`Total Locations: ${document.getElementById('totalValidLocations').textContent}`, 20, 85);
+                        ctx.fillText(`Total Farmers: ${document.getElementById('totalFarmers').textContent}`, 280, 85);
+                        ctx.fillText(`Commodity Types: ${document.getElementById('totalCommoditiesCount').textContent}`, 480, 85);
+                        ctx.fillText(`Total Area: ${document.getElementById('totalArea').textContent} ha`, 700, 85);
+
+                        // Draw the map image
+                        ctx.drawImage(mapCanvas, 0, paddingTop);
+
+                        // Footer note
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#999';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Generated from the interactive map', outCanvas.width / 2, outCanvas.height - 10);
+
+                        // Download the composed image
+                        const link = document.createElement('a');
+                        link.download = `philippines_agricultural_map_${new Date().toISOString().split('T')[0]}.png`;
+                        link.href = outCanvas.toDataURL('image/png');
+                        link.click();
+                    });
+                };
+
+                // Try to wait for tiles if we just switched base layer
+                streetMap.once('load', render);
+                setTimeout(render, 800);
             } catch (error) {
                 console.error('Map export error:', error);
                 alert('Error exporting map. Please try again.');

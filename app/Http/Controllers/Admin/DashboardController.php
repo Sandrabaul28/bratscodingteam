@@ -211,8 +211,8 @@ class DashboardController extends Controller
         $year = $request->input('year');
 
         
-        // Query to fetch plant data with optional month and year filtering
-        $plantsData = DB::table('plants')
+        // Manual entries: fetch plant data with optional month and year filtering
+        $manualPlants = DB::table('plants')
             ->join('monthly_inventories', 'plants.id', '=', 'monthly_inventories.plant_id')
             ->join('farmers', 'farmers.id', '=', 'monthly_inventories.farmer_id')
             ->select(
@@ -230,6 +230,40 @@ class DashboardController extends Controller
             ->groupBy('plants.name_of_plants')
             ->get();
 
+        // Uploaded entries: fetch plant data with optional month and year filtering
+        $uploadedPlants = DB::table('uploaded_inventories')
+            ->select(
+                'commodity as plant_name',
+                DB::raw('SUM(total) as total_plants'),
+                DB::raw('COUNT(DISTINCT farmer) as total_farmers'),
+                DB::raw('COUNT(DISTINCT barangay) as total_barangays')
+            )
+            ->when($month, function ($query) use ($month) {
+                return $query->whereMonth('created_at', $month);
+            })
+            ->when($year, function ($query) use ($year) {
+                return $query->whereYear('created_at', $year);
+            })
+            ->groupBy('commodity')
+            ->get();
+
+        // Combine manual + uploaded into a single collection keyed by plant_name
+        $allPlantNames = collect($manualPlants->pluck('plant_name'))
+            ->merge($uploadedPlants->pluck('plant_name'))
+            ->unique()
+            ->values();
+
+        $plantsData = $allPlantNames->map(function ($plantName) use ($manualPlants, $uploadedPlants) {
+            $m = $manualPlants->firstWhere('plant_name', $plantName);
+            $u = $uploadedPlants->firstWhere('plant_name', $plantName);
+            return (object) [
+                'plant_name' => $plantName,
+                'total_plants' => ($m->total_plants ?? 0) + ($u->total_plants ?? 0),
+                'total_farmers' => ($m->total_farmers ?? 0) + ($u->total_farmers ?? 0),
+                'total_barangays' => ($m->total_barangays ?? 0) + ($u->total_barangays ?? 0),
+            ];
+        })->sortByDesc('total_plants')->values();
+
         // Generate Excel file
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -239,13 +273,31 @@ class DashboardController extends Controller
         $sheet->setCellValue('D1', 'Total Barangays');
 
         $row = 2;
+        $grandPlants = 0; $grandFarmers = 0; $grandBarangays = 0;
         foreach ($plantsData as $item) {
             $sheet->setCellValue('A' . $row, $item->plant_name);
             $sheet->setCellValue('B' . $row, $item->total_plants);
             $sheet->setCellValue('C' . $row, $item->total_farmers);
             $sheet->setCellValue('D' . $row, $item->total_barangays);
+            $grandPlants += (int)$item->total_plants;
+            $grandFarmers += (int)$item->total_farmers;
+            $grandBarangays += (int)$item->total_barangays;
             $row++;
         }
+
+        // Totals row
+        $sheet->setCellValue('A' . $row, 'TOTAL');
+        $sheet->setCellValue('B' . $row, $grandPlants);
+        $sheet->setCellValue('C' . $row, $grandFarmers);
+        $sheet->setCellValue('D' . $row, $grandBarangays);
+
+        // Basic formatting
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+        $sheet->getColumnDimension('A')->setWidth(30);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(18);
+        $sheet->getColumnDimension('D')->setWidth(18);
 
         // Generate a filename with month and year if provided
         $monthYearSuffix = '';
@@ -262,6 +314,52 @@ class DashboardController extends Controller
         $writer->save($tempFilePath);
 
         return response()->download($tempFilePath, $filename)->deleteFileAfterSend(true);
+    }
+
+    // JSON endpoint for plant distribution filtered by month/year (combined sources)
+    public function plantDistribution(Request $request)
+    {
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        $manualPlants = DB::table('plants')
+            ->join('monthly_inventories', 'plants.id', '=', 'monthly_inventories.plant_id')
+            ->join('farmers', 'farmers.id', '=', 'monthly_inventories.farmer_id')
+            ->select('plants.name_of_plants as plant_name',
+                DB::raw('SUM(monthly_inventories.total) as total_plants'),
+                DB::raw('COUNT(DISTINCT farmers.id) as total_farmers'),
+                DB::raw('COUNT(DISTINCT farmers.affiliation_id) as total_barangays'))
+            ->when($month, fn($q) => $q->whereMonth('monthly_inventories.created_at', $month))
+            ->when($year, fn($q) => $q->whereYear('monthly_inventories.created_at', $year))
+            ->groupBy('plants.name_of_plants')
+            ->get();
+
+        $uploadedPlants = DB::table('uploaded_inventories')
+            ->select('commodity as plant_name',
+                DB::raw('SUM(total) as total_plants'),
+                DB::raw('COUNT(DISTINCT farmer) as total_farmers'),
+                DB::raw('COUNT(DISTINCT barangay) as total_barangays'))
+            ->when($month, fn($q) => $q->whereMonth('created_at', $month))
+            ->when($year, fn($q) => $q->whereYear('created_at', $year))
+            ->groupBy('commodity')
+            ->get();
+
+        $all = collect($manualPlants->pluck('plant_name'))
+            ->merge($uploadedPlants->pluck('plant_name'))
+            ->unique();
+
+        $data = $all->map(function ($name) use ($manualPlants, $uploadedPlants) {
+            $m = $manualPlants->firstWhere('plant_name', $name);
+            $u = $uploadedPlants->firstWhere('plant_name', $name);
+            return [
+                'plant_name' => $name,
+                'total_plants' => (int)(($m->total_plants ?? 0) + ($u->total_plants ?? 0)),
+                'total_farmers' => (int)(($m->total_farmers ?? 0) + ($u->total_farmers ?? 0)),
+                'total_barangays' => (int)(($m->total_barangays ?? 0) + ($u->total_barangays ?? 0)),
+            ];
+        })->sortByDesc('total_plants')->values();
+
+        return response()->json(['data' => $data]);
     }
 
     

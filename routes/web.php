@@ -54,6 +54,7 @@ Auth::routes();
 Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], function() {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/export-plant-summary', [DashboardController::class, 'exportPlantSummary'])->name('admin.exportPlantSummary');
+    Route::get('/admin/plant-distribution', [DashboardController::class, 'plantDistribution'])->name('admin.plantDistribution');
     Route::get('/map', [DashboardController::class, 'map'])->name('admin.map');
 
 

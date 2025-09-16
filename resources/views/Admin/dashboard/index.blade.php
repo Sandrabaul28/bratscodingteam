@@ -351,12 +351,25 @@
 
 <script>
     // Pie Chart for Plant Distribution
-    const plantsData = @json($combinedPlantsData);
+    let plantsData = @json($combinedPlantsData);
 
-    const labels = plantsData.map(item => item.plant_name);
-    const totalPlants = plantsData.map(item => item.total_plants);
-    const totalFarmers = plantsData.map(item => item.total_farmers);
-    const totalBarangays = plantsData.map(item => item.total_barangays);
+    function buildPalette(n) {
+        const base = ['#3366CC','#DC3912','#FF9900','#109618','#990099','#3B3EAC','#0099C6','#DD4477','#66AA00','#B82E2E','#316395','#994499','#22AA99','#AAAA11','#6633CC','#E67300','#8B0707','#651067','#329262','#5574A6','#3B3EAC'];
+        const colors = [];
+        for (let i=0;i<n;i++) colors.push(base[i % base.length]);
+        return colors;
+    }
+
+    function toChartArrays(data) {
+        return {
+            labels: data.map(i => i.plant_name),
+            totals: data.map(i => i.total_plants),
+            farmers: data.map(i => i.total_farmers),
+            barangays: data.map(i => i.total_barangays)
+        };
+    }
+
+    let { labels, totals: totalPlants, farmers: totalFarmers, barangays: totalBarangays } = toChartArrays(plantsData);
 
     const ctx = document.getElementById('plantsPieChart').getContext('2d');
     const plantsPieChart = new Chart(ctx, {
@@ -366,20 +379,13 @@
             datasets: [{
                 label: 'Total of Plants per Crop',
                 data: totalPlants,
-                backgroundColor: [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
-                    '#FF7F50', '#00CED1', '#FFD700', '#32CD32', '#8A2BE2', '#FF4500',
-                    '#7FFF00', '#FF6347', '#40E0D0', '#9ACD32', '#FF1493', '#C71585',
-                    '#B22222', '#008080', '#F08080', '#D2691E', '#DC143C', '#FF8C00',
-                    '#6A5ACD', '#98FB98', '#F0E68C', '#DAA520', '#8B0000', '#7B68EE',
-                    '#FFB6C1', '#20B2AA', '#228B22', '#ADFF2F', '#D3D3D3', '#A52A2A',
-                    '#800080', '#9B30FF'
-                ],
+                backgroundColor: buildPalette(totalPlants.length),
                 hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
+            layout: { padding: 10 },
             plugins: {
                 datalabels: {
                     color: '#fff',
@@ -425,13 +431,43 @@
                 legend: {
                     position: 'bottom',
                     labels: {
-                        fontSize: 10
+                        font: { size: 10 },
+                        boxWidth: 12
                     }
                 }
             }
         },
         plugins: [ChartDataLabels]
     });
+
+    // Filter pie chart by month/year via AJAX
+    const filterMonth = document.getElementById('month');
+    const filterYear = document.getElementById('year');
+    const distributionUrl = "{{ route('admin.plantDistribution') }}";
+
+    function refreshPie() {
+        const params = new URLSearchParams();
+        if (filterMonth && filterMonth.value) params.append('month', filterMonth.value);
+        if (filterYear && filterYear.value) params.append('year', filterYear.value);
+        fetch(distributionUrl + (params.toString() ? ('?' + params.toString()) : ''))
+            .then(r => r.json())
+            .then(json => {
+                plantsData = json.data || [];
+                const arrays = toChartArrays(plantsData);
+                labels = arrays.labels;
+                totalPlants = arrays.totals;
+                totalFarmers = arrays.farmers;
+                totalBarangays = arrays.barangays;
+                plantsPieChart.data.labels = labels;
+                plantsPieChart.data.datasets[0].data = totalPlants;
+                plantsPieChart.data.datasets[0].backgroundColor = buildPalette(totalPlants.length);
+                plantsPieChart.update();
+            })
+            .catch(() => {});
+    }
+
+    if (filterMonth) filterMonth.addEventListener('change', refreshPie);
+    if (filterYear) filterYear.addEventListener('change', refreshPie);
 
     // Bar Chart for Monthly Data Overview
     var ctxBar = document.getElementById('monthlyBarChart').getContext('2d');

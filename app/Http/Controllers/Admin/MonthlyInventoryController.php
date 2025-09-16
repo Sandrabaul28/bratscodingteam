@@ -345,6 +345,13 @@ class MonthlyInventoryController extends Controller
         ]);
 
         try {
+            // Increase memory and execution time for heavy Excel processing
+            ini_set('memory_limit', '2048M');
+            set_time_limit(600);
+            
+            // Reduce memory usage during bulk inserts
+            DB::disableQueryLog();
+
             $file = $request->file('excel_file');
             
             // Read the Excel file

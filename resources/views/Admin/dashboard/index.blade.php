@@ -391,13 +391,17 @@
                     color: '#fff',
                     font: {
                         weight: 'bold',
-                        size: 12
+                        size: 11
                     },
                     formatter: (value, ctx) => {
                         const plantName = ctx.chart.data.labels[ctx.dataIndex];
                         const percentage = ((value / totalPlants.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-                        return `${percentage}%`;
-                    }
+                        // Show both plant name and percentage
+                        return `${plantName}\n${percentage}%`;
+                    },
+                    textAlign: 'center',
+                    textStrokeColor: '#000',
+                    textStrokeWidth: 1
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -487,11 +491,13 @@
                             {{ $data->total }},
                         @endforeach
                     ],
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.9)',
                     borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 2,
-                    borderRadius: 4,
+                    borderWidth: 3,
+                    borderRadius: 6,
                     borderSkipped: false,
+                    // Add gradient effect
+                    fill: true,
                 },
                 {
                     label: 'Total Planted Area (HA)',
@@ -500,11 +506,12 @@
                             {{ $data->total_planted_area }},
                         @endforeach
                     ],
-                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.9)',
                     borderColor: 'rgba(255, 193, 7, 1)',
-                    borderWidth: 2,
-                    borderRadius: 4,
+                    borderWidth: 3,
+                    borderRadius: 6,
                     borderSkipped: false,
+                    fill: true,
                 },
                 {
                     label: 'Production Volume (MT)',
@@ -513,11 +520,12 @@
                             {{ $data->final_production_volume }},
                         @endforeach
                     ],
-                    backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                    backgroundColor: 'rgba(23, 162, 184, 0.9)',
                     borderColor: 'rgba(23, 162, 184, 1)',
-                    borderWidth: 2,
-                    borderRadius: 4,
+                    borderWidth: 3,
+                    borderRadius: 6,
                     borderSkipped: false,
+                    fill: true,
                 }
             ]
         },
@@ -560,6 +568,32 @@
                             return label;
                         }
                     }
+                },
+                datalabels: {
+                    display: function(context) {
+                        // Only show labels for the highest value in each month
+                        const dataset = context.dataset;
+                        const data = dataset.data;
+                        const maxValue = Math.max(...data);
+                        return context.parsed.y === maxValue && context.parsed.y > 0;
+                    },
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
+                        size: 10
+                    },
+                    formatter: function(value, context) {
+                        if (context.dataset.label.includes('Area')) {
+                            return value.toFixed(1) + ' HA';
+                        } else if (context.dataset.label.includes('Production')) {
+                            return value.toFixed(1) + ' MT';
+                        } else {
+                            return value.toLocaleString();
+                        }
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 4
                 }
             },
             scales: {
@@ -612,7 +646,8 @@
                 intersect: false,
                 mode: 'index'
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
     // // Print summary functionality

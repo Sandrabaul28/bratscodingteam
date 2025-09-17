@@ -341,20 +341,20 @@ class MonthlyInventoryController extends Controller
     public function uploadExcel(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240' // 10MB max
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:51200' // 50MB max
         ]);
 
         try {
             // Increase memory and execution time for heavy Excel processing
-            ini_set('memory_limit', '2048M');
-            set_time_limit(600);
+            ini_set('memory_limit', '4096M');
+            set_time_limit(900);
             
             // Reduce memory usage during bulk inserts
             DB::disableQueryLog();
 
             $file = $request->file('excel_file');
             
-            // Read the Excel file
+            // Read the Excel file with memory optimization
             $data = Excel::toArray([], $file);
             
             if (empty($data) || empty($data[0])) {
@@ -364,10 +364,17 @@ class MonthlyInventoryController extends Controller
             $rows = $data[0];
             $headerRow = array_shift($rows); // Remove header row
             
+            // Clear the original data to free memory
+            unset($data);
+            
             $importedCount = 0;
             $errors = [];
+            $batchSize = 100; // Process in batches
+            $batches = array_chunk($rows, $batchSize);
 
-            foreach ($rows as $index => $row) {
+            foreach ($batches as $batchIndex => $batch) {
+                foreach ($batch as $rowIndex => $row) {
+                    $index = ($batchIndex * $batchSize) + $rowIndex;
                 try {
                     // Skip empty rows
                     if (empty(array_filter($row))) {
@@ -445,6 +452,13 @@ class MonthlyInventoryController extends Controller
                     $importedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                }
+                }
+                
+                // Clear memory after each batch
+                unset($batch);
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
                 }
             }
 

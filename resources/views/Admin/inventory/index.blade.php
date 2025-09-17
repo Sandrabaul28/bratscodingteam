@@ -318,6 +318,43 @@
                 <span class="font-weight-bold">UPLOAD EXCEL FILE</span>
             </h6>
         </div>
+        
+        <!-- Upload Instructions and Warnings -->
+        <div class="alert alert-info mx-3 mt-3 mb-0">
+            <h6 class="alert-heading">
+                <i class="fas fa-info-circle"></i> Upload Instructions & Requirements
+            </h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-success"><i class="fas fa-check-circle"></i> File Requirements:</h6>
+                    <ul class="mb-2">
+                        <li><strong>Format:</strong> .xlsx or .xls files only</li>
+                        <li><strong>Size:</strong> Maximum 50MB</li>
+                        <li><strong>Rows:</strong> Can handle up to 10,000+ records</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-warning"><i class="fas fa-exclamation-triangle"></i> Common Errors to Avoid:</h6>
+                    <ul class="mb-2">
+                        <li>Don't upload .csv files (use .xlsx instead)</li>
+                        <li>Ensure first row contains headers</li>
+                        <li>Don't leave required columns empty</li>
+                        <li>Check file isn't corrupted or password-protected</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <h6 class="text-primary"><i class="fas fa-table"></i> Expected Excel Format:</h6>
+                    <small class="text-muted">
+                        Column A: Barangay | Column B: Commodity | Column C: Farmer | Column D: Planting Density | 
+                        Column E: Production Vol/Hectare | Column F: Newly Planted | Column G: Vegetative | 
+                        Column H: Reproductive | Column I: Maturity/Harvested | Column J: Total
+                    </small>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
             <form action="{{ route('admin.inventory.uploadExcel') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -331,7 +368,7 @@
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                             <small class="form-text text-muted">
-                                Upload an Excel file with the same format as the sample. Maximum file size: 10MB.
+                                Upload an Excel file with the same format as the sample. Maximum file size: 50MB.
                             </small>
                         </div>
                     </div>

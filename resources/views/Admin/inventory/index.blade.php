@@ -548,187 +548,10 @@
                             <td style="background: #ffb768;">{{ number_format($inventory->final_production_volume, 4) }}</td>
 
                             <td>
-                                <button class="btn btn-warning" data-toggle="modal" data-target="#editModal{{ $inventory->id }}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-warning" onclick="loadEditModal({{ $inventory->id }})"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal{{ $inventory->id }}"><i class="fas fa-trash"></i></button>
                             </td>
 
-                            <!-- Edit Modal -->
-                            <div class="modal fade" id="editModal{{ $inventory->id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $inventory->id }}" aria-hidden="true">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel{{ $inventory->id }}">Edit Inventory Record</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <form action="{{ route('admin.inventory.update', $inventory->id) }}" method="POST">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="modal-body">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="farmer_id_{{ $inventory->id }}">Farmer</label>
-                                                        <select class="form-control" name="farmer_id" id="farmer_id_{{ $inventory->id }}" required>
-                                                            @foreach($farmers as $farmer)
-                                                                <option value="{{ $farmer->id }}" {{ $inventory->farmer_id == $farmer->id ? 'selected' : '' }}>
-                                                                    {{ $farmer->first_name }} {{ $farmer->last_name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="plant_id_{{ $inventory->id }}">Plant</label>
-                                                        <select class="form-control" name="plant_id" id="plant_id_{{ $inventory->id }}" required>
-                                                            @foreach($plants as $plant)
-                                                                <option value="{{ $plant->id }}" {{ $inventory->plant_id == $plant->id ? 'selected' : '' }}>
-                                                                    {{ $plant->name_of_plants }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="affiliation_id_{{ $inventory->id }}">Affiliation</label>
-                                                        <select class="form-control" name="affiliation_id" id="affiliation_id_{{ $inventory->id }}" required>
-                                                            @foreach($affiliations as $affiliation)
-                                                                <option value="{{ $affiliation->id }}" {{ $inventory->affiliation_id == $affiliation->id ? 'selected' : '' }}>
-                                                                    {{ $affiliation->name_of_association }} - {{ $affiliation->name_of_barangay }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="planting_density_{{ $inventory->id }}">Planting Density</label>
-                                                        <input type="number" class="form-control" name="planting_density" id="planting_density_{{ $inventory->id }}" value="{{ round($inventory->planting_density, 4) }}" step="0.0001" required>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="production_volume_{{ $inventory->id }}">Production Volume</label>
-                                                        <input type="number" class="form-control" name="production_volume" id="production_volume_{{ $inventory->id }}" value="{{ round($inventory->production_volume, 4) }}" step="0.0001" required>
-                                                    </div>
-
-                                                    <!-- Remaining Fields -->
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="newly_planted_{{ $inventory->id }}">Newly Planted</label>
-                                                        <input type="number" class="form-control" name="newly_planted" id="newly_planted_{{ $inventory->id }}" value="{{ $inventory->newly_planted }}">
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="vegetative_{{ $inventory->id }}">Vegetative</label>
-                                                        <input type="number" class="form-control" name="vegetative" id="vegetative_{{ $inventory->id }}" value="{{ $inventory->vegetative }}">
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="reproductive_{{ $inventory->id }}">Reproductive</label>
-                                                        <input type="number" class="form-control" name="reproductive" id="reproductive_{{ $inventory->id }}" value="{{ $inventory->reproductive }}">
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="maturity_harvested_{{ $inventory->id }}">Maturity Harvested</label>
-                                                        <input type="number" class="form-control" name="maturity_harvested" id="maturity_harvested_{{ $inventory->id }}" value="{{ $inventory->maturity_harvested }}">
-                                                    </div>
-
-                                                    <!-- New Readonly Fields -->
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="newly_planted_divided_{{ $inventory->id }}">Newly Planted /ha</label>
-                                                        <input type="text" class="form-control" name="newly_planted_divided" id="newly_planted_divided_{{ $inventory->id }}" value="{{ number_format($inventory->newly_planted_divided, 4) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="vegetative_divided_{{ $inventory->id }}">Vegetative /ha</label>
-                                                        <input type="text" class="form-control" name="vegetative_divided" id="vegetative_divided_{{ $inventory->id }}" value="{{ number_format($inventory->vegetative_divided, 4) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="reproductive_divided_{{ $inventory->id }}">Reproductive /ha</label>
-                                                        <input type="text" class="form-control" name="reproductive_divided" id="reproductive_divided_{{ $inventory->id }}" value="{{ number_format($inventory->reproductive_divided, 4) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="maturity_harvested_divided_{{ $inventory->id }}">Maturity Harvested /ha</label>
-                                                        <input type="text" class="form-control" name="maturity_harvested_divided" id="maturity_harvested_divided_{{ $inventory->id }}" value="{{ number_format($inventory->maturity_harvested_divided, 4) }}" readonly>
-                                                    </div>
-
-                                                    <!-- Calculated Fields -->
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="area_harvested_{{ $inventory->id }}">Area Harvested (HAS)</label>
-                                                        <input type="text" class="form-control" name="area_harvested" id="area_harvested_{{ $inventory->id }}" value="{{ number_format($inventory->area_harvested, 4) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="final_production_volume_{{ $inventory->id }}">Production Volume (MT)</label>
-                                                        <input type="text" class="form-control" name="final_production_volume" id="final_production_volume_{{ $inventory->id }}" value="{{ number_format($inventory->final_production_volume, 4) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="total_{{ $inventory->id }}">Total</label>
-                                                        <input type="text" class="form-control" name="total" id="total_{{ $inventory->id }}" value="{{ number_format($inventory->total) }}" readonly>
-                                                    </div>
-
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="total_planted_area_{{ $inventory->id }}">Total Planted Area</label>
-                                                        <input type="text" class="form-control" name="total_planted_area" id="total_planted_area_{{ $inventory->id }}" value="{{ number_format($inventory->total_planted_area, 4) }}" readonly>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <script>
-                                            document.addEventListener('DOMContentLoaded', function () {
-                                                const inventoryId = {{ $inventory->id }};
-                                                
-                                                function updateCalculations() {
-                                                    const plantingDensity = parseFloat(document.getElementById('planting_density_' + inventoryId).value.replace(/,/g, '')) || 0;
-                                                    const maturityHarvested = parseFloat(document.getElementById('maturity_harvested_' + inventoryId).value) || 0;
-                                                    const productionVolume = parseFloat(document.getElementById('production_volume_' + inventoryId).value) || 0;
-                                                    const newlyPlanted = parseFloat(document.getElementById('newly_planted_' + inventoryId).value) || 0;
-                                                    const vegetative = parseFloat(document.getElementById('vegetative_' + inventoryId).value) || 0;
-                                                    const reproductive = parseFloat(document.getElementById('reproductive_' + inventoryId).value) || 0;
-
-                                                    // Calculate divided values
-                                                    const newlyPlantedDivided = (plantingDensity > 0) ? (newlyPlanted / plantingDensity) : 0;
-                                                    const vegetativeDivided = (plantingDensity > 0) ? (vegetative / plantingDensity) : 0;
-                                                    const reproductiveDivided = (plantingDensity > 0) ? (reproductive / plantingDensity) : 0;
-                                                    const maturityHarvestedDivided = (plantingDensity > 0) ? (maturityHarvested / plantingDensity) : 0;
-
-                                                    document.getElementById('newly_planted_divided_' + inventoryId).value = newlyPlantedDivided.toFixed(4);
-                                                    document.getElementById('vegetative_divided_' + inventoryId).value = vegetativeDivided.toFixed(4);
-                                                    document.getElementById('reproductive_divided_' + inventoryId).value = reproductiveDivided.toFixed(4);
-                                                    document.getElementById('maturity_harvested_divided_' + inventoryId).value = maturityHarvestedDivided.toFixed(4);
-
-                                                    // Calculations for area harvested, total, total planted area, and final production volume
-                                                    const areaHarvested = maturityHarvestedDivided;
-                                                    const total = newlyPlanted + vegetative + reproductive + maturityHarvested;
-                                                    const totalPlantedArea = newlyPlantedDivided + vegetativeDivided + reproductiveDivided + maturityHarvestedDivided;
-                                                    const finalProductionVolume = (areaHarvested * productionVolume) / 1000;
-
-                                                    // Update fields
-                                                    document.getElementById('area_harvested_' + inventoryId).value = areaHarvested.toFixed(4);
-                                                    document.getElementById('total_' + inventoryId).value = total;
-                                                    document.getElementById('total_planted_area_' + inventoryId).value = totalPlantedArea.toFixed(4);
-                                                    document.getElementById('final_production_volume_' + inventoryId).value = finalProductionVolume.toFixed(4);
-                                                }
-
-                                                // Attach event listeners to input fields
-                                                document.getElementById('planting_density_' + inventoryId).addEventListener('input', updateCalculations);
-                                                document.getElementById('maturity_harvested_' + inventoryId).addEventListener('input', updateCalculations);
-                                                document.getElementById('production_volume_' + inventoryId).addEventListener('input', updateCalculations);
-                                                document.getElementById('newly_planted_' + inventoryId).addEventListener('input', updateCalculations);
-                                                document.getElementById('vegetative_' + inventoryId).addEventListener('input', updateCalculations);
-                                                document.getElementById('reproductive_' + inventoryId).addEventListener('input', updateCalculations);
-                                            });
-                                            </script>
-
-
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
 
 
 
@@ -926,6 +749,110 @@
             setTimeout(() => successMessage.remove(), 500);
         }
     }, 5000);
+</script>
+
+<!-- Single Edit Modal (loaded via AJAX) -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Inventory Record</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="editModalBody">
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading edit form...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// AJAX function to load edit modal
+function loadEditModal(inventoryId) {
+    $('#editModal').modal('show');
+    
+    // Show loading state
+    $('#editModalBody').html(`
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2">Loading edit form...</p>
+        </div>
+    `);
+    
+    // Fetch edit form via AJAX
+    fetch(`/admin/inventory/${inventoryId}/edit-form`)
+        .then(response => response.text())
+        .then(html => {
+            $('#editModalBody').html(html);
+            // Re-initialize any JavaScript for the loaded form
+            initializeEditForm();
+        })
+        .catch(error => {
+            console.error('Error loading edit form:', error);
+            $('#editModalBody').html(`
+                <div class="alert alert-danger">
+                    <h6>Error Loading Form</h6>
+                    <p>Unable to load the edit form. Please try again.</p>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            `);
+        });
+}
+
+// Initialize edit form calculations
+function initializeEditForm() {
+    const inventoryId = $('input[name="inventory_id"]').val();
+    if (!inventoryId) return;
+    
+    function updateCalculations() {
+        const plantingDensity = parseFloat($('#planting_density_' + inventoryId).val().replace(/,/g, '')) || 0;
+        const maturityHarvested = parseFloat($('#maturity_harvested_' + inventoryId).val()) || 0;
+        const productionVolume = parseFloat($('#production_volume_' + inventoryId).val()) || 0;
+        const newlyPlanted = parseFloat($('#newly_planted_' + inventoryId).val()) || 0;
+        const vegetative = parseFloat($('#vegetative_' + inventoryId).val()) || 0;
+        const reproductive = parseFloat($('#reproductive_' + inventoryId).val()) || 0;
+
+        // Calculate divided values
+        const newlyPlantedDivided = (plantingDensity > 0) ? (newlyPlanted / plantingDensity) : 0;
+        const vegetativeDivided = (plantingDensity > 0) ? (vegetative / plantingDensity) : 0;
+        const reproductiveDivided = (plantingDensity > 0) ? (reproductive / plantingDensity) : 0;
+        const maturityHarvestedDivided = (plantingDensity > 0) ? (maturityHarvested / plantingDensity) : 0;
+
+        $('#newly_planted_divided_' + inventoryId).val(newlyPlantedDivided.toFixed(4));
+        $('#vegetative_divided_' + inventoryId).val(vegetativeDivided.toFixed(4));
+        $('#reproductive_divided_' + inventoryId).val(reproductiveDivided.toFixed(4));
+        $('#maturity_harvested_divided_' + inventoryId).val(maturityHarvestedDivided.toFixed(4));
+
+        // Calculations for area harvested, total, total planted area, and final production volume
+        const areaHarvested = maturityHarvestedDivided;
+        const total = newlyPlanted + vegetative + reproductive + maturityHarvested;
+        const totalPlantedArea = newlyPlantedDivided + vegetativeDivided + reproductiveDivided + maturityHarvestedDivided;
+        const finalProductionVolume = (areaHarvested * productionVolume) / 1000;
+
+        // Update fields
+        $('#area_harvested_' + inventoryId).val(areaHarvested.toFixed(4));
+        $('#total_' + inventoryId).val(total);
+        $('#total_planted_area_' + inventoryId).val(totalPlantedArea.toFixed(4));
+        $('#final_production_volume_' + inventoryId).val(finalProductionVolume.toFixed(4));
+    }
+
+    // Attach event listeners to input fields
+    $('#planting_density_' + inventoryId).on('input', updateCalculations);
+    $('#maturity_harvested_' + inventoryId).on('input', updateCalculations);
+    $('#production_volume_' + inventoryId).on('input', updateCalculations);
+    $('#newly_planted_' + inventoryId).on('input', updateCalculations);
+    $('#vegetative_' + inventoryId).on('input', updateCalculations);
+    $('#reproductive_' + inventoryId).on('input', updateCalculations);
+}
 </script>
 
 @endsection

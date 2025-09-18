@@ -143,6 +143,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:Admin']], funct
         Route::get('/create', [MonthlyInventoryController::class, 'create'])->name('create');
         Route::post('/', [MonthlyInventoryController::class, 'store'])->name('store');
         Route::get('/{inventory}/edit', [MonthlyInventoryController::class, 'edit'])->name('edit');
+        Route::get('/{inventory}/edit-form', [MonthlyInventoryController::class, 'editForm'])->name('editForm');
         
         Route::put('{inventory}', [MonthlyInventoryController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [MonthlyInventoryController::class, 'destroy'])->name('destroy');

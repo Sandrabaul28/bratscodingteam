@@ -150,6 +150,16 @@ class MonthlyInventoryController extends Controller
         return view('Admin.inventory.index', compact('inventory', 'farmers', 'plants', 'affiliations'));
     }
 
+    public function editForm($id)
+    {
+        $inventory = MonthlyInventory::findOrFail($id);
+        $farmers = Farmer::all();
+        $plants = Plant::all();
+        $affiliations = Affiliation::all();
+
+        return view('Admin.inventory.edit-form', compact('inventory', 'farmers', 'plants', 'affiliations'));
+    }
+
 
 
     public function update(Request $request, $id)

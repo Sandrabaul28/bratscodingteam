@@ -587,6 +587,11 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        <div class="card-footer">
+            {{ $inventories->links() }}
+        </div>
     </div>
 </div>
 

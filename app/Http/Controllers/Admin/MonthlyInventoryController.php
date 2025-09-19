@@ -21,17 +21,21 @@ class MonthlyInventoryController extends Controller
 {
     public function index()
     {
-
-        // Fetch all inventories along with their relationships
-        $inventories = MonthlyInventory::with(['farmer', 'plant', 'affiliation'])->get();
-
-        // Fetch uploaded inventories
-        $uploadedInventories = UploadedInventory::all();
+        // Increase memory limit for this page
+        ini_set('memory_limit', '1024M');
         
-        // Fetch farmers, plants, and affiliations for the form
-        $farmers = Farmer::all();
-        $plants = Plant::all();
-        $affiliations = Affiliation::all();
+        // Use pagination to limit records per page and reduce memory usage
+        $inventories = MonthlyInventory::with(['farmer', 'plant', 'affiliation'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(50); // Show 50 records per page
+
+        // Fetch uploaded inventories with pagination
+        $uploadedInventories = UploadedInventory::orderBy('created_at', 'desc')->paginate(50);
+        
+        // Empty collections since we use AJAX for edit forms now
+        $farmers = collect();
+        $plants = collect();
+        $affiliations = collect();
 
         return view('Admin.inventory.index', compact('inventories', 'uploadedInventories', 'farmers', 'plants', 'affiliations'), [
             'title' => 'Monthly Inventory'
@@ -152,10 +156,15 @@ class MonthlyInventoryController extends Controller
 
     public function editForm($id)
     {
+        // Increase memory limit for this specific request
+        ini_set('memory_limit', '512M');
+        
         $inventory = MonthlyInventory::findOrFail($id);
-        $farmers = Farmer::all();
-        $plants = Plant::all();
-        $affiliations = Affiliation::all();
+        
+        // Use select() to only get needed columns, reducing memory usage
+        $farmers = Farmer::select('id', 'first_name', 'last_name')->get();
+        $plants = Plant::select('id', 'name_of_plants')->get();
+        $affiliations = Affiliation::select('id', 'name_of_association', 'name_of_barangay')->get();
 
         return view('Admin.inventory.edit-form', compact('inventory', 'farmers', 'plants', 'affiliations'));
     }

@@ -20,6 +20,61 @@
         padding: 0.5em 1em;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
+    .pagination-info {
+        color: #6c757d;
+        font-size: 0.9em;
+        padding: 0.5em 0;
+    }
+    
+    /* Enhanced Pagination Styling */
+    .pagination {
+        margin: 0;
+    }
+    
+    .pagination .page-link {
+        color: #4e73df;
+        background-color: #fff;
+        border: 1px solid #dddfeb;
+        padding: 0.5rem 0.75rem;
+        margin: 0 2px;
+        border-radius: 0.35rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .pagination .page-link:hover {
+        color: #224abe;
+        background-color: #eaecf4;
+        border-color: #dddfeb;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .pagination .page-item.active .page-link {
+        color: #fff;
+        background-color: #4e73df;
+        border-color: #4e73df;
+        box-shadow: 0 2px 4px rgba(78, 115, 223, 0.3);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        color: #858796;
+        background-color: #fff;
+        border-color: #dddfeb;
+        cursor: not-allowed;
+    }
+    
+    .pagination .page-item:first-child .page-link {
+        border-top-left-radius: 0.35rem;
+        border-bottom-left-radius: 0.35rem;
+    }
+    
+    .pagination .page-item:last-child .page-link {
+        border-top-right-radius: 0.35rem;
+        border-bottom-right-radius: 0.35rem;
+    }
 </style>
 <div class="container-fluid">
     <div class="card shadow mb-4">
@@ -390,7 +445,7 @@
                 <h6 class="m-0 text-success"><span class="font-weight-bold">RECORDED INVENTORY</span></h6>
             </div>
             <div class="col-md-6 text-right">
-                <span class="badge badge-primary count-display" id="recordedCount">Total Records: {{ $inventories->count() }}</span>
+                <span class="badge badge-primary count-display" id="recordedCount">Total Records: {{ $inventories->total() }}</span>
             </div>
         </div>
         <br>
@@ -436,7 +491,7 @@
                 }
                 
                 // Update the count display
-                const totalRecords = rows.length - 1; // Subtract 1 for header row
+                const totalRecords = {{ $inventories->total() }};
                 const countElement = document.getElementById('recordedCount');
                 if (query === '') {
                     countElement.textContent = `Total Records: ${totalRecords}`;
@@ -481,7 +536,7 @@
             }
             
             // Update the count display
-            const totalRecords = rows.length - 1; // Subtract 1 for header row
+            const totalRecords = {{ $uploadedInventories->total() }};
             const countElement = document.getElementById('uploadedCount');
             if (query === '') {
                 countElement.textContent = `Total Records: ${totalRecords}`;
@@ -590,7 +645,16 @@
         
         <!-- Pagination -->
         <div class="card-footer">
-            {{ $inventories->links() }}
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="pagination-info">
+                    <small class="text-muted">
+                        Showing {{ $inventories->firstItem() ?? 0 }} to {{ $inventories->lastItem() ?? 0 }} of {{ $inventories->total() }} entries
+                    </small>
+                </div>
+                <div>
+                    {{ $inventories->appends(request()->query())->links('pagination::bootstrap-4') }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -606,7 +670,7 @@
                 </h6>
             </div>
             <div class="col-md-6 text-right">
-                <span class="badge badge-info count-display" id="uploadedCount">Total Records: {{ $uploadedInventories->count() }}</span>
+                <span class="badge badge-info count-display" id="uploadedCount">Total Records: {{ $uploadedInventories->total() }}</span>
             </div>
         </div>
         <br>
@@ -663,6 +727,20 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination for Uploaded Data -->
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="pagination-info">
+                    <small class="text-muted">
+                        Showing {{ $uploadedInventories->firstItem() ?? 0 }} to {{ $uploadedInventories->lastItem() ?? 0 }} of {{ $uploadedInventories->total() }} entries
+                    </small>
+                </div>
+                <div>
+                    {{ $uploadedInventories->appends(request()->query())->links('pagination::bootstrap-4') }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
